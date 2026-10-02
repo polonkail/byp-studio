@@ -9,7 +9,9 @@
 <meta property="og:title" content="BYP Stúdió · Szépséged a szenvedélyünk">
 <meta property="og:description" content="Fodrászat, köröm, pedikűr, szempilla és fülbelövés Hajdúszoboszlón. Online időpontfoglalás.">
 <meta property="og:image" content="/assets/img/og.jpg">
-<link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/img/favicon-48.png" type="image/png" sizes="48x48">
+<link rel="icon" href="/assets/img/favicon-512.png" type="image/png" sizes="512x512">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <link rel="preload" href="/assets/fonts/cormorant-garamond-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" as="image" href="/assets/img/marble-noir.webp">
 <link rel="stylesheet" href="/assets/css/site.css">
@@ -66,8 +68,7 @@
 <header class="site-head" id="head">
   <div class="wrap">
     <a class="logo" href="#top" aria-label="BYP Stúdió, kezdőlap">
-      <span class="logo-mark">BYP</span>
-      <span class="logo-word"><b>BYP</b><small>Stúdió</small></span>
+      <img class="logo-img" src="/assets/img/logo-monogram.png" alt="BYP Studio" width="359" height="300">
     </a>
     <nav class="nav" id="nav" aria-label="Fő menü">
       <a href="#rolunk">Rólunk</a>
@@ -87,8 +88,7 @@
     <svg class="hero-badge" viewBox="0 0 200 200" aria-hidden="true">
       <defs><path id="ring" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0"/></defs>
       <g class="spin"><text><textPath href="#ring" textLength="486">SZÉPSÉGED A SZENVEDÉLYÜNK · BYP STÚDIÓ · HAJDÚSZOBOSZLÓ ·</textPath></text></g>
-      <circle cx="100" cy="100" r="60" fill="none" stroke="currentColor" stroke-width=".6" opacity=".55"/>
-      <text x="100" y="109" text-anchor="middle" class="mono">BYP</text>
+      <image href="/assets/img/logo-monogram.png" x="46" y="55" width="108" height="90" preserveAspectRatio="xMidYMid meet"/>
     </svg>
     <div class="wrap">
       <p class="eyebrow rv">Szépségstúdió · Hajdúszoboszló</p>
@@ -165,12 +165,15 @@
         <form class="gb-form" id="gbForm" novalidate>
           <fieldset class="stars-field">
             <legend>Értékelés</legend>
-            <div class="stars" id="gbStars">
-              <input type="radio" name="rating" id="r5" value="5" checked><label for="r5" title="5 csillag"><svg class="ico"><use href="#i-star"/></svg><span class="sr">5 csillag</span></label>
-              <input type="radio" name="rating" id="r4" value="4"><label for="r4" title="4 csillag"><svg class="ico"><use href="#i-star"/></svg><span class="sr">4 csillag</span></label>
-              <input type="radio" name="rating" id="r3" value="3"><label for="r3" title="3 csillag"><svg class="ico"><use href="#i-star"/></svg><span class="sr">3 csillag</span></label>
-              <input type="radio" name="rating" id="r2" value="2"><label for="r2" title="2 csillag"><svg class="ico"><use href="#i-star"/></svg><span class="sr">2 csillag</span></label>
-              <input type="radio" name="rating" id="r1" value="1"><label for="r1" title="1 csillag"><svg class="ico"><use href="#i-star"/></svg><span class="sr">1 csillag</span></label>
+            <div class="stars-row">
+              <div class="stars" id="gbStars" role="radiogroup" aria-label="Értékelés 1-től 5 csillagig">
+                <button type="button" class="star" data-v="1" role="radio" aria-checked="false" aria-label="1 csillag" tabindex="0"><svg class="ico"><use href="#i-star"/></svg></button>
+                <button type="button" class="star" data-v="2" role="radio" aria-checked="false" aria-label="2 csillag" tabindex="-1"><svg class="ico"><use href="#i-star"/></svg></button>
+                <button type="button" class="star" data-v="3" role="radio" aria-checked="false" aria-label="3 csillag" tabindex="-1"><svg class="ico"><use href="#i-star"/></svg></button>
+                <button type="button" class="star" data-v="4" role="radio" aria-checked="false" aria-label="4 csillag" tabindex="-1"><svg class="ico"><use href="#i-star"/></svg></button>
+                <button type="button" class="star" data-v="5" role="radio" aria-checked="false" aria-label="5 csillag" tabindex="-1"><svg class="ico"><use href="#i-star"/></svg></button>
+              </div>
+              <span class="stars-label" id="gbStarsLabel">Kattints a csillagokra</span>
             </div>
           </fieldset>
           <div class="form">
@@ -295,7 +298,8 @@
 
 <footer class="site-foot">
   <div class="wrap">
-    <span>© <span id="year">2026</span> BYP Stúdió · Hajdúszoboszló, Luther u. 11.</span>
+    <img class="foot-logo" src="/assets/img/logo-full.png" alt="BYP Studio – Szépséged a szenvedélyünk" width="610" height="700" loading="lazy">
+    <span>© <span id="year">2026</span> BYP Studio · Hajdúszoboszló, Luther u. 11.</span>
     <span><a href="/adatkezeles.html">Adatkezelési tájékoztató</a></span>
   </div>
 </footer>

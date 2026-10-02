@@ -259,6 +259,27 @@
     }
     $('#gbMoreWrap').hidden = gbEntries.length <= gbShown;
   }
+  // csillagos értékelés: kattintásra az adott és az előtte lévő csillagok színeződnek be
+  let gbRating = 0;
+  const LABELS = ['', 'Nem voltam elégedett', 'Lehetett volna jobb', 'Jó volt', 'Nagyon jó volt', 'Kiváló!'];
+  const starBtns = [...document.querySelectorAll('#gbStars .star')];
+  const paintStars = n => starBtns.forEach((b, i) => b.classList.toggle('on', i < n));
+  const setRating = n => {
+    gbRating = n; paintStars(n);
+    starBtns.forEach((b, i) => { b.setAttribute('aria-checked', String(i + 1 === n)); b.tabIndex = (n ? i + 1 === n : i === 0) ? 0 : -1; });
+    const lab = $('#gbStarsLabel'); lab.textContent = n ? LABELS[n] : 'Kattints a csillagokra'; lab.classList.toggle('set', !!n);
+  };
+  starBtns.forEach((b, i) => {
+    b.addEventListener('click', () => setRating(i + 1));
+    b.addEventListener('mouseenter', () => paintStars(i + 1));
+    b.addEventListener('keydown', e => {
+      const k = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
+      if (!k) return; e.preventDefault();
+      const n = Math.min(5, Math.max(1, (gbRating || i + 1) + (gbRating ? k : 0)));
+      setRating(n); starBtns[n - 1].focus();
+    });
+  });
+  $('#gbStars').addEventListener('mouseleave', () => paintStars(gbRating));
   $('#gbMore').addEventListener('click', () => { gbShown += 6; renderGuestbook(); });
   const netlifyForm = (name, data) => fetch('/', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ 'form-name': name, ...data }).toString() }).catch(() => {});
   const thanks = (title, text) => el('div', { class: 'thanks' }, el('div', { class: 'ring' }, icon('check')), el('h3', {}, title), el('p', { class: 'muted', style: 'max-width:44ch' }, text));
@@ -266,7 +287,8 @@
     e.preventDefault();
     const st = $('#gbStatus'), btn = $('#gbSubmit'); st.className = 'status err';
     const name = $('#gbName').value.trim(), text = $('#gbText').value.trim();
-    const rating = Number(document.querySelector('#gbStars input:checked')?.value || 0);
+    const rating = gbRating;
+    if (!rating) { st.textContent = 'Kattints a csillagokra az értékeléshez.'; starBtns[0].focus(); return; }
     if (name.length < 2) { st.textContent = 'Add meg a neved (keresztnév is elég).'; $('#gbName').focus(); return; }
     if (text.length < 5) { st.textContent = 'Írj néhány szót a bejegyzésbe.'; $('#gbText').focus(); return; }
     if (!$('#gbConsent').checked) { st.textContent = 'Fogadd el, hogy a bejegyzésed megjelenjen az oldalon.'; return; }
