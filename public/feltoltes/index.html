@@ -47,6 +47,21 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
 .chip-row{display:flex;flex-wrap:wrap;gap:8px}
 .fchip{border:1px solid rgba(34,28,30,.18);background:#fff;padding:.45em 1em;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase}
 .fchip[aria-pressed="true"]{background:var(--noir);color:#fff;border-color:var(--noir)}
+.badge{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--gold-lt);color:var(--noir);font-size:.68rem;letter-spacing:0;margin-left:6px;font-weight:500}
+.item{border:1px solid rgba(34,28,30,.1);background:#fff;padding:18px 20px;display:grid;gap:12px}
+.item.pending{border-left:3px solid var(--gold)}
+.item.unread{border-left:3px solid var(--gold);background:#fffaf2}
+.item.hidden-st{opacity:.65}
+.item-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 16px;align-items:center}
+.item-top small{color:var(--stone);font-size:.8rem}
+.item q{font-family:var(--f-display);font-size:1.25rem;font-style:italic;quotes:"„" "”";overflow-wrap:anywhere}
+.item p{overflow-wrap:anywhere;white-space:pre-wrap}
+.item-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pill{font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;padding:3px 10px;border:1px solid currentColor}
+.pill.p{color:var(--gold)} .pill.a{color:var(--free)} .pill.h{color:var(--stone)}
+.reply{display:grid;gap:8px}
+.reply textarea{font:inherit;font-size:.95rem;border:1px solid rgba(34,28,30,.18);padding:10px;min-height:70px;background:#fff;resize:vertical}
+.stars-sm{color:var(--gold);letter-spacing:2px}
 </style>
 </head>
 <body>
@@ -94,7 +109,8 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
   <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></symbol><symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14" />
   <path d="m12 5 7 7-7 7" /></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" /></symbol><symbol id="i-polish" viewBox="0 0 24 24"><path d="M10 2h4v6h-4z"/><path d="M9 8h6v2H9z"/><path d="M8 10h8a2 2 0 0 1 2 2v7a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3v-7a2 2 0 0 1 2-2z"/><path d="M9 15h6"/></symbol><symbol id="i-lash" viewBox="0 0 24 24"><path d="M2 12c3.5-4 7-6 10-6s6.5 2 10 6"/><path d="M2 12c3.5 3.2 7 4.8 10 4.8s6.5-1.6 10-4.8"/><circle cx="12" cy="11.6" r="2.6"/><path d="M5 8.6 3.6 6.6"/><path d="M8.4 6.6 7.6 4.3"/><path d="M12 6V3.5"/><path d="M15.6 6.6l.8-2.3"/><path d="M19 8.6l1.4-2"/></symbol><symbol id="i-earring" viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="2"/><path d="M12 6.5v3"/><path d="M12 9.5c-2.6 3-3.8 5.4-3.8 7.4a3.8 3.8 0 0 0 7.6 0c0-2-1.2-4.4-3.8-7.4z"/><circle cx="12" cy="16.8" r="1.1"/></symbol><symbol id="i-instagram" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r=".6" fill="currentColor"/></symbol><symbol id="i-facebook" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M13.2 21.4v-7.6h2.4l.4-2.8h-2.8V9.3c0-.8.3-1.4 1.4-1.4h1.5V5.4c-.3 0-1.2-.1-2.2-.1-2.2 0-3.6 1.3-3.6 3.7V11H8v2.8h2.3v7.6"/></symbol><symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 5h16" />
   <path d="M4 12h16" />
-  <path d="M4 19h16" /></symbol></svg><!--SPRITE:END-->
+  <path d="M4 19h16" /></symbol><symbol id="i-quote" viewBox="0 0 24 24"><path d="M16 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 1 1 0 0 1 1 1v1a2 2 0 0 1-2 2 1 1 0 0 0-1 1v2a1 1 0 0 0 1 1 6 6 0 0 0 6-6V5a2 2 0 0 0-2-2z" />
+  <path d="M5 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 1 1 0 0 1 1 1v1a2 2 0 0 1-2 2 1 1 0 0 0-1 1v2a1 1 0 0 0 1 1 6 6 0 0 0 6-6V5a2 2 0 0 0-2-2z" /></symbol><symbol id="i-message" viewBox="0 0 24 24"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719" /></symbol></svg><!--SPRITE:END-->
 <header class="adm-head">
   <div class="wrap">
     <a class="logo" href="/"><span class="logo-mark">BYP</span><span class="logo-word"><b>BYP</b><small>Kezelőfelület</small></span></a>
@@ -102,6 +118,8 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
       <button class="tab" role="tab" data-tab="galeria" aria-selected="true">Galéria</button>
       <button class="tab" role="tab" data-tab="foglalasok" aria-selected="false">Foglalások</button>
       <button class="tab" role="tab" data-tab="zaras" aria-selected="false">Szabadság, zárás</button>
+      <button class="tab" role="tab" data-tab="vendegkonyv" aria-selected="false">Vendégkönyv <span class="badge" id="bGb" hidden></span></button>
+      <button class="tab" role="tab" data-tab="visszajelzes" aria-selected="false">Visszajelzések <span class="badge" id="bFb" hidden></span></button>
       <button class="tab" id="logout" style="color:var(--stone-lt)">Kilépés</button>
     </nav>
   </div>
@@ -167,6 +185,25 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
       <label class="field"><span>Megjegyzés (csak nektek látszik)</span><input id="blNote" maxlength="120" placeholder="pl. szabadság, továbbképzés"></label>
       <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap"><button class="btn" type="submit">Lezárás</button><p class="status" id="blMsg" role="status"></p></div>
     </form>
+  </section>
+
+  <!-- guestbook moderation -->
+  <section id="tab-vendegkonyv" hidden>
+    <div class="card">
+      <div style="display:grid;gap:12px"><p class="eyebrow">Vendégkönyv</p><h2>Bejegyzések</h2>
+      <p class="muted">Az új bejegyzések csak jóváhagyás után jelennek meg a honlapon. Válaszolni is tudsz rájuk, a válasz a bejegyzés alatt látszik.</p></div>
+      <div class="chip-row" id="gbFilter"></div>
+      <div id="gbAdmin" style="display:grid;gap:14px"></div>
+    </div>
+  </section>
+
+  <!-- feedback -->
+  <section id="tab-visszajelzes" hidden>
+    <div class="card">
+      <div style="display:grid;gap:12px"><p class="eyebrow">Visszajelzések</p><h2>Üzenetek a vendégektől</h2>
+      <p class="muted">Ezek az üzenetek nem jelennek meg a honlapon.</p></div>
+      <div id="fbAdmin" style="display:grid;gap:14px"></div>
+    </div>
   </section>
 </main>
 <script src="/assets/js/admin.js" defer></script>

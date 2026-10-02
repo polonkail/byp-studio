@@ -234,11 +234,82 @@
     $('#map').replaceChildren(el('iframe', { title: 'BYP Stúdió a térképen', loading: 'lazy', referrerpolicy: 'no-referrer-when-downgrade', src: 'https://www.google.com/maps?q=Hajd%C3%BAszoboszl%C3%B3,+Luther+u.+11&z=16&output=embed' }));
   });
 
+  /* ---------- guestbook ---------- */
+  let gbEntries = [], gbShown = 6;
+  const stars = n => { const w = el('span', { class: 'rating', 'aria-label': `${n} csillag az 5-ből` }); for (let i = 1; i <= 5; i++) { const ic = icon('star'); if (i <= n) ic.classList.add('on'); w.append(ic); } return w; };
+  const ago = iso => new Date(iso).toLocaleDateString('hu-HU', { year: 'numeric', month: 'long' });
+  function renderGuestbook() {
+    const list = $('#gbList'); list.replaceChildren();
+    const sc = $('#gbScore');
+    if (!gbEntries.length) {
+      sc.hidden = true; $('#gbMoreWrap').hidden = true;
+      list.append(el('div', { class: 'gb-empty', style: 'column-span:all' }, 'Legyél te az első, aki ír nekünk.'));
+      return;
+    }
+    const avg = gbEntries.reduce((a, e) => a + e.rating, 0) / gbEntries.length;
+    sc.hidden = false;
+    sc.replaceChildren(el('b', {}, avg.toFixed(1).replace('.', ',')), el('div', {}, stars(Math.round(avg)), el('small', {}, `${gbEntries.length} értékelés alapján`)));
+    for (const e of gbEntries.slice(0, gbShown)) {
+      const S = e.spec && specById(e.spec);
+      list.append(el('article', { class: 'gb-entry' },
+        stars(e.rating),
+        el('blockquote', {}, e.text),
+        e.reply ? el('div', { class: 'gb-reply' }, el('b', {}, 'A stúdió válasza'), e.reply) : null,
+        el('footer', {}, el('span', {}, el('b', {}, e.name), S ? ' · ' + (S.short || S.name) : ''), el('span', {}, ago(e.createdAt)))));
+    }
+    $('#gbMoreWrap').hidden = gbEntries.length <= gbShown;
+  }
+  $('#gbMore').addEventListener('click', () => { gbShown += 6; renderGuestbook(); });
+  const netlifyForm = (name, data) => fetch('/', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ 'form-name': name, ...data }).toString() }).catch(() => {});
+  const thanks = (title, text) => el('div', { class: 'thanks' }, el('div', { class: 'ring' }, icon('check')), el('h3', {}, title), el('p', { class: 'muted', style: 'max-width:44ch' }, text));
+  $('#gbForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const st = $('#gbStatus'), btn = $('#gbSubmit'); st.className = 'status err';
+    const name = $('#gbName').value.trim(), text = $('#gbText').value.trim();
+    const rating = Number(document.querySelector('#gbStars input:checked')?.value || 0);
+    if (name.length < 2) { st.textContent = 'Add meg a neved (keresztnév is elég).'; $('#gbName').focus(); return; }
+    if (text.length < 5) { st.textContent = 'Írj néhány szót a bejegyzésbe.'; $('#gbText').focus(); return; }
+    if (!$('#gbConsent').checked) { st.textContent = 'Fogadd el, hogy a bejegyzésed megjelenjen az oldalon.'; return; }
+    btn.disabled = true; st.className = 'status'; st.textContent = 'Küldés…';
+    try {
+      await api('/api/guestbook', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name, text, rating, spec: $('#gbSpec').value, consent: true, website: $('#gbWeb').value }) });
+      netlifyForm('vendegkonyv', { nev: name, ertekeles: String(rating), szakember: $('#gbSpec').selectedOptions[0]?.textContent || '', bejegyzes: text });
+      $('#gbForm').replaceWith(thanks('Köszönjük a kedves szavakat!', 'A bejegyzésedet hamarosan átnézzük, és utána megjelenik a vendégkönyvben.'));
+    } catch (err) { btn.disabled = false; st.className = 'status err'; st.textContent = err.message; }
+  });
+
+  /* ---------- feedback ---------- */
+  const TOPICS = ['Dicséret', 'Javaslat', 'Panasz', 'Kérdés', 'Egyéb'];
+  let fbTopic = 'Javaslat';
+  function renderTopics() {
+    const box = $('#fbTopics'); box.replaceChildren();
+    for (const t of TOPICS) box.append(el('button', { type: 'button', class: 'fb-topic', role: 'radio', 'aria-checked': String(fbTopic === t), onclick: () => { fbTopic = t; renderTopics(); } }, t));
+  }
+  renderTopics();
+  $('#fbContact').addEventListener('input', () => { $('#fbConsentRow').hidden = !$('#fbContact').value.trim(); });
+  $('#fbForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const st = $('#fbStatus'), btn = $('#fbSubmit'); st.className = 'status err';
+    const text = $('#fbText').value.trim(), contact = $('#fbContact').value.trim();
+    if (text.length < 5) { st.textContent = 'Írd le pár szóban a visszajelzésed.'; $('#fbText').focus(); return; }
+    if (contact && !$('#fbConsent').checked) { st.textContent = 'Ha elérhetőséget adsz meg, fogadd el az adatkezelést.'; return; }
+    btn.disabled = true; st.className = 'status'; st.textContent = 'Küldés…';
+    const data = { topic: fbTopic, spec: $('#fbSpec').value, name: $('#fbName').value.trim(), contact, text, consent: !!contact, website: $('#fbWeb').value };
+    try {
+      await api('/api/feedback', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) });
+      netlifyForm('visszajelzes', { tema: data.topic, szakember: $('#fbSpec').selectedOptions[0]?.textContent || '', nev: data.name, elerhetoseg: contact, uzenet: text });
+      $('#fbForm').replaceChildren(thanks('Köszönjük, megkaptuk!', contact ? 'Hamarosan jelentkezünk a megadott elérhetőségen.' : 'Minden visszajelzést elolvasunk, és sokat segít nekünk.'));
+    } catch (err) { btn.disabled = false; st.className = 'status err'; st.textContent = err.message; }
+  });
+
   /* ---------- start ---------- */
   (async () => {
     try { CFG = await api('/api/config'); }
     catch { $('#team').replaceChildren(el('p', { class: 'status err' }, 'Az oldal betöltése nem sikerült. Frissítsd az oldalt.')); return; }
     renderTeam(); renderBooking(); renderGalFilter(); renderGallery();
+    for (const id of ['#gbSpec', '#fbSpec']) $(id).append(...CFG.specialists.map(s => el('option', { value: s.id }, s.name)));
+    renderGuestbook();
+    api('/api/guestbook').then(r => { gbEntries = r.entries || []; renderGuestbook(); }).catch(() => {});
     const pre = new URLSearchParams(location.search).get('szakember');
     if (pre && specById(pre)) selectSpec(pre);
     try { images = (await api('/api/gallery')).images || []; renderGallery(); } catch {}

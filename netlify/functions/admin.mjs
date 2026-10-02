@@ -103,6 +103,47 @@ export default handle(async req => {
     return json({ ok: true, created });
   }
 
+  // --- guestbook moderation ---
+  if (route === 'guestbook' && M === 'GET') {
+    return json({ entries: (await store('guestbook').get('index', { type: 'json' })) || [] });
+  }
+  const gb = route.match(/^guestbook\/([a-z0-9]{6,32})$/);
+  if (gb && M === 'POST') {
+    const b = await req.json();
+    await mutateJSON(store('guestbook'), 'index', idx => {
+      idx = idx || [];
+      if (b.action === 'delete') return idx.filter(e => e.id !== gb[1]);
+      return idx.map(e => e.id !== gb[1] ? e : {
+        ...e,
+        status: b.action === 'approve' ? 'approved' : b.action === 'hide' ? 'hidden' : e.status,
+        reply: b.reply !== undefined ? clean(b.reply, 600) : e.reply,
+      });
+    });
+    return json({ ok: true });
+  }
+
+  // --- private feedback ---
+  if (route === 'feedback' && M === 'GET') {
+    return json({ items: (await store('feedback').get('index', { type: 'json' })) || [] });
+  }
+  const fb = route.match(/^feedback\/([a-z0-9]{6,32})$/);
+  if (fb && M === 'POST') {
+    const b = await req.json();
+    await mutateJSON(store('feedback'), 'index', idx => {
+      idx = idx || [];
+      if (b.action === 'delete') return idx.filter(x => x.id !== fb[1]);
+      return idx.map(x => x.id !== fb[1] ? x : { ...x, read: b.action === 'unread' ? false : true });
+    });
+    return json({ ok: true });
+  }
+
+  // --- counters for tab badges ---
+  if (route === 'counts' && M === 'GET') {
+    const g = (await store('guestbook').get('index', { type: 'json' })) || [];
+    const f = (await store('feedback').get('index', { type: 'json' })) || [];
+    return json({ guestbookPending: g.filter(e => e.status === 'pending').length, feedbackUnread: f.filter(x => !x.read).length });
+  }
+
   throw new HttpError(404, 'not_found', 'Ismeretlen művelet.');
 });
 

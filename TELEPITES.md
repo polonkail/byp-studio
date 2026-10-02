@@ -10,7 +10,7 @@
 2. A repository oldalán: **Add file → Upload files**. Húzd be a kicsomagolt mappa teljes tartalmát (a `public`, `netlify` mappát, a `netlify.toml`, `package.json`, `package-lock.json` fájlokat). **Commit changes**.
 3. A Netlify-on (app.netlify.com): **Add new site → Import an existing project → GitHub**, válaszd ki a repository-t, majd **Deploy**. A beállításokat nem kell módosítani, a `netlify.toml` mindent tartalmaz.
 4. **Site configuration → Environment variables → Add a variable**: név `ADMIN_PASSWORD`, érték: a kezelőfelület jelszava. Utána **Deploys → Trigger deploy → Deploy site**.
-5. Ha kéred, hogy új foglalásról e-mailt kapj: **Site configuration → Forms → Enable form detection**, utána egy újabb deploy, majd **Forms → Form notifications → Add notification → Email notification**, űrlap: `foglalas`.
+5. Ha e-mailt szeretnél kapni új foglalásról, vendégkönyv-bejegyzésről vagy visszajelzésről: **Project configuration → Forms → Enable form detection**, utána egy újabb deploy, majd **Forms → Form notifications → Add notification → Email notification**. Űrlaponként külön állítható: `foglalas`, `vendegkonyv`, `visszajelzes`.
 6. Az oldal neve átírható: **Site configuration → Change site name** (pl. `byp-studio-szalon` → byp-studio-szalon.netlify.app).
 
 ## Telepítés parancssorból (ha van Node.js a gépen)
@@ -24,6 +24,10 @@ npx netlify-cli deploy --prod
 (A drag-and-drop feltöltés nem jó, mert az nem telepíti a foglalási rendszert.)
 
 ## Használat
-- Galéria feltöltés és foglalások: `https://<oldal-neve>.netlify.app/feltoltes/`
+- Kezelőfelület: `https://<oldal-neve>.netlify.app/feltoltes/` – galéria, foglalások, szabadság, vendégkönyv (jóváhagyás, válasz), visszajelzések
+- Az új vendégkönyv-bejegyzések csak jóváhagyás után jelennek meg.
+
+## Frissítés (ha már fent van az oldal)
+A GitHub repositoryban **Add file → Upload files**, húzd be újra a kicsomagolt mappa teljes tartalmát, majd **Commit changes**. A Netlify pár perc alatt magától frissíti az oldalt.
 - A foglalásokat 30 nap után a rendszer automatikusan törli.
 - A háttérképek a `tools/gen_bg.py` szkripttel készültek; saját fotóra cserélhetők a `public/assets/img` mappában.

@@ -11,6 +11,7 @@
     return e;
   };
   const KEY = 'byp-admin-pw';
+  const TABS = ['galeria', 'foglalasok', 'zaras', 'vendegkonyv', 'visszajelzes'];
   let PW = ''; try { PW = sessionStorage.getItem(KEY) || ''; } catch {}
   let CFG = null, images = [], bookings = [], bkFilter = 'all';
 
@@ -36,7 +37,7 @@
   function logout(msg) {
     PW = ''; try { sessionStorage.removeItem(KEY); } catch {}
     $('#loginForm').hidden = false; $('#tabs').hidden = true;
-    ['galeria', 'foglalasok', 'zaras'].forEach(t => $('#tab-' + t).hidden = true);
+    TABS.forEach(t => $('#tab-' + t).hidden = true);
     $('#loginMsg').textContent = msg || '';
   }
   $('#logout').addEventListener('click', () => logout(''));
@@ -54,12 +55,15 @@
     showTab(location.hash.slice(1) || 'galeria');
   }
   function showTab(t) {
-    if (!['galeria', 'foglalasok', 'zaras'].includes(t)) t = 'galeria';
+    if (!TABS.includes(t)) t = 'galeria';
     document.querySelectorAll('.tab[data-tab]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
-    ['galeria', 'foglalasok', 'zaras'].forEach(x => $('#tab-' + x).hidden = x !== t);
+    TABS.forEach(x => $('#tab-' + x).hidden = x !== t);
     history.replaceState(null, '', '#' + t);
     if (t === 'galeria') loadImages();
     if (t === 'foglalasok') loadBookings();
+    if (t === 'vendegkonyv') loadGb();
+    if (t === 'visszajelzes') loadFb();
+    loadCounts();
   }
   document.querySelectorAll('.tab[data-tab]').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
 
@@ -157,6 +161,69 @@
       msg.textContent = r.created.length ? `Lezárva: ${fmtDay($('#blDate').value)}, ${r.created.map(x => `${specName(x.spec)} ${x.start}–${x.end}`).join('; ')}` : 'Ezen a napon amúgy is zárva vagytok.';
     } catch (err) { msg.style.color = ''; msg.className = 'status err'; msg.textContent = err.message; }
   });
+
+  /* ---------- counts ---------- */
+  async function loadCounts() {
+    try {
+      const c = await api('/api/admin/counts');
+      const set = (id, n) => { const b = $(id); b.hidden = !n; b.textContent = n; };
+      set('#bGb', c.guestbookPending); set('#bFb', c.feedbackUnread);
+    } catch {}
+  }
+  const when = iso => new Date(iso).toLocaleString('hu-HU', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const post = (url, body) => api(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+
+  /* ---------- guestbook moderation ---------- */
+  let gbAll = [], gbF = 'pending';
+  async function loadGb() {
+    $('#gbAdmin').replaceChildren(el('p', { class: 'muted' }, 'Betöltés…'));
+    try { gbAll = (await api('/api/admin/guestbook')).entries; renderGb(); } catch (e) { if (e.message !== 'unauthorized') $('#gbAdmin').replaceChildren(el('p', { class: 'status err' }, e.message)); }
+  }
+  function renderGb() {
+    const n = st => gbAll.filter(e => e.status === st).length;
+    const f = $('#gbFilter'); f.replaceChildren();
+    for (const [id, lab] of [['pending', `Jóváhagyásra vár (${n('pending')})`], ['approved', `Megjelenik (${n('approved')})`], ['hidden', `Elrejtve (${n('hidden')})`]])
+      f.append(el('button', { class: 'fchip', type: 'button', 'aria-pressed': String(gbF === id), onclick: () => { gbF = id; renderGb(); } }, lab));
+    const box = $('#gbAdmin'); box.replaceChildren();
+    const list = gbAll.filter(e => e.status === gbF);
+    if (!list.length) { box.append(el('p', { class: 'muted' }, gbF === 'pending' ? 'Nincs új bejegyzés.' : 'Nincs ilyen bejegyzés.')); return; }
+    for (const e of list) {
+      const act = async (action, extra = {}) => { await post('/api/admin/guestbook/' + e.id, { action, ...extra }); await loadGb(); loadCounts(); };
+      const pill = { pending: ['p', 'Jóváhagyásra vár'], approved: ['a', 'Megjelenik'], hidden: ['h', 'Elrejtve'] }[e.status];
+      const replyTa = el('textarea', { placeholder: 'A stúdió válasza (nem kötelező)', maxlength: '600' }, e.reply || '');
+      const saveReply = el('button', { class: 'mini', type: 'button', onclick: async () => { saveReply.textContent = 'Mentés…'; try { await post('/api/admin/guestbook/' + e.id, { action: 'reply', reply: replyTa.value }); saveReply.textContent = 'Mentve'; } catch (err) { saveReply.textContent = 'Válasz mentése'; alertMsg(err.message); } } }, 'Válasz mentése');
+      const del = el('button', { class: 'mini danger', type: 'button' }, 'Törlés');
+      armed(del, 'Törlés', () => act('delete'));
+      box.append(el('div', { class: 'item' + (e.status === 'pending' ? ' pending' : e.status === 'hidden' ? ' hidden-st' : '') },
+        el('div', { class: 'item-top' }, el('span', {}, el('span', { class: 'stars-sm' }, '★'.repeat(e.rating) + '☆'.repeat(5 - e.rating)), '  ', el('b', {}, e.name), e.spec ? el('small', {}, ' · ' + specName(e.spec)) : null), el('span', { style: 'display:flex;gap:10px;align-items:center' }, el('small', {}, when(e.createdAt)), el('span', { class: 'pill ' + pill[0] }, pill[1]))),
+        el('q', {}, e.text),
+        el('div', { class: 'reply' }, replyTa),
+        el('div', { class: 'item-actions' },
+          e.status !== 'approved' ? el('button', { class: 'btn', type: 'button', style: 'min-height:38px;padding:0 1.2em', onclick: () => act('approve', { reply: replyTa.value }) }, 'Jóváhagyás') : null,
+          e.status !== 'hidden' ? el('button', { class: 'mini', type: 'button', onclick: () => act('hide') }, 'Elrejtés') : null,
+          saveReply, del)));
+    }
+  }
+
+  /* ---------- feedback ---------- */
+  async function loadFb() {
+    $('#fbAdmin').replaceChildren(el('p', { class: 'muted' }, 'Betöltés…'));
+    try { renderFb((await api('/api/admin/feedback')).items); } catch (e) { if (e.message !== 'unauthorized') $('#fbAdmin').replaceChildren(el('p', { class: 'status err' }, e.message)); }
+  }
+  function renderFb(items) {
+    const box = $('#fbAdmin'); box.replaceChildren();
+    if (!items.length) { box.append(el('p', { class: 'muted' }, 'Még nem érkezett visszajelzés.')); return; }
+    for (const x of items) {
+      const act = async action => { await post('/api/admin/feedback/' + x.id, { action }); loadFb(); loadCounts(); };
+      const del = el('button', { class: 'mini danger', type: 'button' }, 'Törlés');
+      armed(del, 'Törlés', () => act('delete'));
+      box.append(el('div', { class: 'item' + (x.read ? '' : ' unread') },
+        el('div', { class: 'item-top' }, el('span', {}, el('b', {}, x.topic), x.spec ? el('small', {}, ' · ' + specName(x.spec)) : el('small', {}, ' · egész stúdió')), el('small', {}, when(x.createdAt))),
+        el('p', {}, x.text),
+        el('small', { class: 'muted' }, [x.name || 'Névtelen', x.contact].filter(Boolean).join(' · ')),
+        el('div', { class: 'item-actions' }, el('button', { class: 'mini', type: 'button', onclick: () => act(x.read ? 'unread' : 'read') }, x.read ? 'Olvasatlannak jelöl' : 'Olvasottnak jelöl'), del)));
+    }
+  }
 
   if (PW) api('/api/admin/login', { method: 'POST' }).then(enter).catch(() => {});
 })();
