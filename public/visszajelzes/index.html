@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Galéria · BYP Studio</title>
-<meta name="description" content="A BYP Studio munkái: frizurák, körmök, szempilla és pedikűr.">
+<title>Visszajelzés · BYP Studio</title>
+<meta name="description" content="Írd meg nekünk a véleményed, ötleted vagy kérdésed. Az üzenetet csak a BYP Studio munkatársai olvassák.">
 <meta name="theme-color" content="#141012">
 <meta property="og:title" content="BYP Stúdió · Szépséged a szenvedélyünk">
 <meta property="og:description" content="Fodrászat, köröm, pedikűr, szempilla és fülbelövés Hajdúszoboszlón. Online időpontfoglalás.">
@@ -73,10 +73,10 @@
     <nav class="nav" id="nav" aria-label="Fő menü">
       <a href="/#rolunk">Rólunk</a>
       <a href="/#szolgaltatasok">Szolgáltatások</a>
-      <a href="/galeria/" aria-current="page">Galéria</a>
+      <a href="/galeria/">Galéria</a>
       <a href="/vendegkonyv/">Vendégkönyv</a>
       <a href="/foglalas/">Időpontfoglalás</a>
-      <a href="/visszajelzes/">Visszajelzés</a>
+      <a href="/visszajelzes/" aria-current="page">Visszajelzés</a>
       <a href="/#kapcsolat">Kapcsolat</a>
     </nav>
     <a class="btn line head-cta" href="/foglalas/" style="--b:var(--gold-lt)">Foglalás</a>
@@ -87,15 +87,32 @@
 <main id="top">
   <section class="page-hero on-dark">
     <div class="wrap">
-      <p class="eyebrow rv">Galéria</p>
-      <h1 class="rv">Munkáink <em>közelről</em></h1>
-      <p class="lead rv">Válogatás a stúdió négy szakemberének munkáiból.</p>
+      <p class="eyebrow rv">Visszajelzés</p>
+      <h1 class="rv">Mondd el <em>őszintén</em></h1>
+      <p class="lead rv">Minden üzenetet elolvasunk, és sokat segít nekünk, hogy még jobbak legyünk.</p>
     </div>
   </section>
-  <section class="sec on-dark marble-band page-first" id="galeria">
-    <div class="wrap">
-      <div class="chips rv" id="galFilter" role="group" aria-label="Szűrés szakterület szerint"></div>
-      <div id="gal"></div>
+  <section class="sec" id="visszajelzes">
+    <div class="wrap fb">
+      <div class="rv" style="display:grid;gap:22px;align-content:start">
+        <p class="lead">Ötleted, kérdésed van, vagy valami nem úgy sikerült, ahogy szeretted volna? Ezt az üzenetet csak mi olvassuk. Névtelenül is írhatsz.</p>
+        <ul class="fb-points">
+          <li><svg class="ico"><use href="#i-lock"/></svg>Nem jelenik meg az oldalon</li>
+          <li><svg class="ico"><use href="#i-message"/></svg>Ha elérhetőséget adsz meg, válaszolunk</li>
+        </ul>
+      </div>
+      <form class="fb-card rv" id="fbForm" novalidate>
+        <div class="fb-topics" id="fbTopics" role="radiogroup" aria-label="Téma"></div>
+        <div class="form">
+          <label class="field wide"><span>Üzeneted</span><textarea id="fbText" maxlength="2000" placeholder="Írd le, mit gondolsz…"></textarea></label>
+          <div class="field wide"><span class="choice-t" id="fbSpecT">Kinél jártál?</span><div class="choice" id="fbSpec" role="radiogroup" aria-labelledby="fbSpecT"></div></div>
+          <label class="field wide"><span>Neved (nem kötelező)</span><input id="fbName" maxlength="60" autocomplete="name"></label>
+          <label class="field wide"><span>Telefon vagy e-mail, ha választ kérsz (nem kötelező)</span><input id="fbContact" maxlength="120" autocomplete="email"></label>
+          <label class="hp" aria-hidden="true">Weboldal<input id="fbWeb" tabindex="-1" autocomplete="off"></label>
+          <label class="check wide" id="fbConsentRow" hidden><input type="checkbox" id="fbConsent"><span>Hozzájárulok, hogy a BYP Stúdió az elérhetőségemet a válaszadás céljából tárolja.</span></label>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:center"><button class="btn" type="submit" id="fbSubmit">Üzenet küldése</button><p class="status" id="fbStatus" role="status"></p></div>
+      </form>
     </div>
   </section>
 </main>
@@ -107,13 +124,6 @@
     <span><a href="/adatkezeles.html">Adatkezelési tájékoztató</a></span>
   </div>
 </footer>
-
-<div class="lightbox" id="lb" hidden role="dialog" aria-modal="true" aria-label="Kép nagyítva">
-  <button class="lb-btn lb-close" id="lbClose" aria-label="Bezárás"><svg class="ico"><use href="#i-x"/></svg></button>
-  <button class="lb-btn lb-prev" id="lbPrev" aria-label="Előző kép"><svg class="ico"><use href="#i-chevron-left"/></svg></button>
-  <button class="lb-btn lb-next" id="lbNext" aria-label="Következő kép"><svg class="ico"><use href="#i-chevron-right"/></svg></button>
-  <figure style="margin:0"><img id="lbImg" alt=""><p id="lbCap"></p></figure>
-</div>
 
 <script src="/assets/js/site.js?v=20261003c" defer></script>
 </body>

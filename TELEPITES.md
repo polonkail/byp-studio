@@ -24,10 +24,11 @@ npx netlify-cli deploy --prod
 (A drag-and-drop feltöltés nem jó, mert az nem telepíti a foglalási rendszert.)
 
 ## Oldalak
-- Főoldal: `/` (rólunk, szolgáltatások, visszajelzés, kapcsolat)
+- Főoldal: `/` (rólunk, szolgáltatások, kapcsolat)
 - Galéria: `/galeria/`
 - Vendégkönyv: `/vendegkonyv/`
 - Időpontfoglalás: `/foglalas/` (egy szakember előre kiválasztva: `/foglalas/?szakember=petra`)
+- Visszajelzés: `/visszajelzes/`
 - A közös fejléc és lábléc a `tools/src/full.html` fájlból készül a `python3 tools/build_pages.py` paranccsal.
 
 ## Használat

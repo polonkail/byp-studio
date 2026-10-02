@@ -25,7 +25,8 @@ script = re.search(r'<script src="/assets/js/site\.js[^"]*" defer></script>', sr
 
 NAV = [('rolunk', '/#rolunk', 'Rólunk'), ('szolgaltatasok', '/#szolgaltatasok', 'Szolgáltatások'),
        ('galeria', '/galeria/', 'Galéria'), ('vendegkonyv', '/vendegkonyv/', 'Vendégkönyv'),
-       ('foglalas', '/foglalas/', 'Időpontfoglalás'), ('kapcsolat', '/#kapcsolat', 'Kapcsolat')]
+       ('foglalas', '/foglalas/', 'Időpontfoglalás'), ('visszajelzes', '/visszajelzes/', 'Visszajelzés'),
+       ('kapcsolat', '/#kapcsolat', 'Kapcsolat')]
 
 
 def header(active):
@@ -89,6 +90,12 @@ explore = '''  <section class="sec explore" id="felfedezes">
           <span class="ex-d" id="exGb">Olvasd el, mit írtak rólunk a vendégeink, vagy írj te is.</span>
           <span class="textlink">Elolvasom <svg class="ico"><use href="#i-arrow-right"/></svg></span>
         </a>
+        <a class="ex-card" href="/visszajelzes/">
+          <svg class="ico"><use href="#i-message"/></svg>
+          <span class="ex-t">Visszajelzés</span>
+          <span class="ex-d">Ötleted, kérdésed van? Írd meg nekünk, akár névtelenül is.</span>
+          <span class="textlink">Írok nektek <svg class="ico"><use href="#i-arrow-right"/></svg></span>
+        </a>
         <a class="ex-card dark" href="/foglalas/">
           <svg class="ico"><use href="#i-calendar-days"/></svg>
           <span class="ex-t">Időpontfoglalás</span>
@@ -103,7 +110,7 @@ explore = '''  <section class="sec explore" id="felfedezes">
 hero = re.search(r'  <section class="hero on-dark">.*?\n  </section>\n', src, re.S).group(0)
 hero = hero.replace('href="#foglalas"', 'href="/foglalas/"')
 main_body = ('<main id="top">\n' + hero + '\n' + section('rolunk') + '\n' + section('szolgaltatasok') + '\n'
-             + explore + section('visszajelzes') + '\n' + section('kapcsolat') + '</main>\n\n')
+             + explore + section('kapcsolat') + '</main>\n\n')
 write('index.html', page_head('BYP Studio · Szépségstúdió Hajdúszoboszló',
                               'BYP Studio, Hajdúszoboszló: fodrászat, kézápolás, műköröm, pedikűr, szempilla-hosszabbítás és fülbelövés egy helyen. Foglalj időpontot online.')
       + header('') + '\n' + main_body + footer + '\n\n' + forms + script + '\n</body>\n</html>\n')
@@ -132,3 +139,11 @@ write('foglalas/index.html', page_head('Időpontfoglalás · BYP Studio', 'Fogla
       + header('foglalas') + '\n<main id="top">\n'
       + page_hero('Online időpontfoglalás', 'Válaszd ki a <em>te</em> időpontodat', 'A naptárban zölddel látod a szabad időpontokat. Pár kattintás, és már várunk is.')
       + bk + '</main>\n\n' + footer + '\n\n' + script + '\n</body>\n</html>\n')
+
+# ---------- feedback ----------
+fb = section('visszajelzes')
+fb = re.sub(r'\s*<p class="eyebrow">Visszajelzés</p>\s*<h2>.*?</h2>', '', fb, count=1, flags=re.S)
+write('visszajelzes/index.html', page_head('Visszajelzés · BYP Studio', 'Írd meg nekünk a véleményed, ötleted vagy kérdésed. Az üzenetet csak a BYP Studio munkatársai olvassák.')
+      + header('visszajelzes') + '\n<main id="top">\n'
+      + page_hero('Visszajelzés', 'Mondd el <em>őszintén</em>', 'Minden üzenetet elolvasunk, és sokat segít nekünk, hogy még jobbak legyünk.')
+      + fb + '</main>\n\n' + footer + '\n\n' + script + '\n</body>\n</html>\n')

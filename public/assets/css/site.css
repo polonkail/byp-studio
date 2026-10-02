@@ -61,12 +61,12 @@ p{margin:0}
 .logo-word{display:grid;line-height:1}
 .logo-word b{font-family:var(--f-display);font-weight:500;font-size:1.45rem;letter-spacing:.08em}
 .logo-word small{font-size:.58rem;letter-spacing:.42em;text-transform:uppercase;color:var(--gold-lt);margin-top:4px}
-.nav{display:flex;gap:30px;margin-left:auto}
+.nav{display:flex;gap:24px;margin-left:auto}
 .nav a{text-decoration:none;font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;opacity:.82;transition:opacity .2s,color .2s}
 .nav a:hover{opacity:1;color:var(--gold-lt)}
 .head-cta{min-height:42px;padding:0 1.3em}
 .burger{display:none;margin-left:auto;background:none;border:0;width:44px;height:44px;place-items:center;font-size:1.5rem;color:inherit}
-@media (max-width:980px){
+@media (max-width:1180px){
   .nav{position:fixed;inset:calc(78px + env(safe-area-inset-top,0px)) 0 auto;flex-direction:column;gap:0;background:var(--noir);padding:8px var(--gutter) 22px;border-bottom:1px solid var(--noir-line);transform:translateY(-8px);opacity:0;pointer-events:none;transition:.3s var(--ease)}
   .nav a{padding:14px 0;border-bottom:1px solid var(--noir-line);font-size:.8rem}
   .nav.open{opacity:1;transform:none;pointer-events:auto}
@@ -331,11 +331,11 @@ p{margin:0}
 .page-first{padding-top:clamp(40px,5vw,64px)}
 .page-hero + .sec{padding-top:clamp(48px,6vw,80px)}
 .nav a[aria-current="page"]{opacity:1;color:var(--gold-lt)}
-@media (min-width:981px){ .nav a[aria-current="page"]{box-shadow:0 1px 0 var(--gold-lt)} }
+@media (min-width:1181px){ .nav a[aria-current="page"]{box-shadow:0 1px 0 var(--gold-lt)} }
 
 /* explore cards (főoldal) */
 .explore{background:var(--paper)}
-.explore-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:rgba(34,28,30,.1);border:1px solid rgba(34,28,30,.1)}
+.explore-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:rgba(34,28,30,.1);border:1px solid rgba(34,28,30,.1)}
 .ex-card{background:var(--paper);padding:clamp(30px,4vw,48px);display:grid;gap:16px;align-content:start;text-decoration:none;transition:background .35s}
 .ex-card > .ico{font-size:2.4rem;color:var(--gold);stroke-width:1}
 .ex-t{font-family:var(--f-display);font-size:2rem;line-height:1.1}
@@ -345,7 +345,8 @@ p{margin:0}
 .ex-card.dark{background:var(--noir) url("../img/marble-band-sm.webp") center/cover;color:#f4ede6}
 .ex-card.dark .ex-d{color:#b9ada4}
 .ex-card.dark > .ico,.ex-card.dark .textlink{color:var(--gold-lt)}
-@media (max-width:860px){ .explore-grid{grid-template-columns:1fr} .ex-d{min-height:0} }
+@media (max-width:1100px){ .explore-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:620px){ .explore-grid{grid-template-columns:1fr} .ex-d{min-height:0} }
 
 .site-foot{background:#0e0b0c;color:#8f847d;font-size:.8rem;padding-block:34px calc(34px + env(safe-area-inset-bottom,0px))}
 .site-foot .wrap{display:flex;flex-wrap:wrap;gap:12px 30px;justify-content:space-between;align-items:center}
