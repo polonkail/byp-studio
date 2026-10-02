@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <link rel="preload" href="/assets/fonts/cormorant-garamond-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" as="image" href="/assets/img/marble-noir.webp">
-<link rel="stylesheet" href="/assets/css/site.css">
+<link rel="stylesheet" href="/assets/css/site.css?v=20261003a">
 <script>document.documentElement.classList.add('js')</script>
 </head>
 <body>
@@ -68,7 +68,7 @@
 <header class="site-head" id="head">
   <div class="wrap">
     <a class="logo" href="#top" aria-label="BYP Stúdió, kezdőlap">
-      <img class="logo-img" src="/assets/img/logo-monogram.png" alt="BYP Studio" width="359" height="300">
+      <img class="logo-img" src="/assets/img/logo-monogram.png" alt="BYP Studio" width="74" height="62" style="height:62px;width:auto">
     </a>
     <nav class="nav" id="nav" aria-label="Fő menü">
       <a href="#rolunk">Rólunk</a>
@@ -163,22 +163,20 @@
           <p class="muted">Örülünk minden kedves szónak. A bejegyzéseket megjelenés előtt átnézzük.</p>
         </div>
         <form class="gb-form" id="gbForm" novalidate>
-          <fieldset class="stars-field">
-            <legend>Értékelés</legend>
-            <div class="stars-row">
-              <div class="stars" id="gbStars" role="radiogroup" aria-label="Értékelés 1-től 5 csillagig">
-                <button type="button" class="star" data-v="1" role="radio" aria-checked="false" aria-label="1 csillag" tabindex="0"><svg class="ico"><use href="#i-star"/></svg></button>
-                <button type="button" class="star" data-v="2" role="radio" aria-checked="false" aria-label="2 csillag" tabindex="-1"><svg class="ico"><use href="#i-star"/></svg></button>
-                <button type="button" class="star" data-v="3" role="radio" aria-checked="false" aria-label="3 csillag" tabindex="-1"><svg class="ico"><use href="#i-star"/></svg></button>
-                <button type="button" class="star" data-v="4" role="radio" aria-checked="false" aria-label="4 csillag" tabindex="-1"><svg class="ico"><use href="#i-star"/></svg></button>
-                <button type="button" class="star" data-v="5" role="radio" aria-checked="false" aria-label="5 csillag" tabindex="-1"><svg class="ico"><use href="#i-star"/></svg></button>
-              </div>
-              <span class="stars-label" id="gbStarsLabel">Kattints a csillagokra</span>
+          <div class="rate-block">
+            <p class="choice-t" id="rateTitle">Hány csillagot adsz?</p>
+            <div class="rate" id="rate" role="radiogroup" aria-labelledby="rateTitle">
+              <button type="button" class="rate-star" data-v="1" role="radio" aria-checked="false" aria-label="1 csillag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93z"/></svg></button>
+              <button type="button" class="rate-star" data-v="2" role="radio" aria-checked="false" aria-label="2 csillag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93z"/></svg></button>
+              <button type="button" class="rate-star" data-v="3" role="radio" aria-checked="false" aria-label="3 csillag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93z"/></svg></button>
+              <button type="button" class="rate-star" data-v="4" role="radio" aria-checked="false" aria-label="4 csillag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93z"/></svg></button>
+              <button type="button" class="rate-star" data-v="5" role="radio" aria-checked="false" aria-label="5 csillag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93z"/></svg></button>
+              <span class="rate-text" id="rateText" aria-live="polite">Kattints egy csillagra</span>
             </div>
-          </fieldset>
+          </div>
           <div class="form">
             <label class="field"><span>Neved (ez jelenik meg)</span><input id="gbName" maxlength="60" autocomplete="given-name" placeholder="pl. Anna K."></label>
-            <label class="field"><span>Kinél jártál? (nem kötelező)</span><select id="gbSpec"><option value="">Nem adom meg</option></select></label>
+            <div class="field wide"><span class="choice-t" id="gbSpecT">Kinél jártál?</span><div class="choice" id="gbSpec" role="radiogroup" aria-labelledby="gbSpecT"></div></div>
             <label class="field wide"><span>Bejegyzésed</span><textarea id="gbText" maxlength="1000" placeholder="Milyen volt nálunk?"></textarea></label>
             <label class="hp" aria-hidden="true">Weboldal<input id="gbWeb" tabindex="-1" autocomplete="off"></label>
             <label class="check wide"><input type="checkbox" id="gbConsent"><span>Hozzájárulok, hogy a nevem és a bejegyzésem megjelenjen a BYP Stúdió honlapján.</span></label>
@@ -255,8 +253,8 @@
         <div class="fb-topics" id="fbTopics" role="radiogroup" aria-label="Téma"></div>
         <div class="form">
           <label class="field wide"><span>Üzeneted</span><textarea id="fbText" maxlength="2000" placeholder="Írd le, mit gondolsz…"></textarea></label>
-          <label class="field"><span>Kinek szól? (nem kötelező)</span><select id="fbSpec"><option value="">Az egész stúdiónak</option></select></label>
-          <label class="field"><span>Neved (nem kötelező)</span><input id="fbName" maxlength="60" autocomplete="name"></label>
+          <div class="field wide"><span class="choice-t" id="fbSpecT">Kinél jártál?</span><div class="choice" id="fbSpec" role="radiogroup" aria-labelledby="fbSpecT"></div></div>
+          <label class="field wide"><span>Neved (nem kötelező)</span><input id="fbName" maxlength="60" autocomplete="name"></label>
           <label class="field wide"><span>Telefon vagy e-mail, ha választ kérsz (nem kötelező)</span><input id="fbContact" maxlength="120" autocomplete="email"></label>
           <label class="hp" aria-hidden="true">Weboldal<input id="fbWeb" tabindex="-1" autocomplete="off"></label>
           <label class="check wide" id="fbConsentRow" hidden><input type="checkbox" id="fbConsent"><span>Hozzájárulok, hogy a BYP Stúdió az elérhetőségemet a válaszadás céljából tárolja.</span></label>
@@ -322,6 +320,6 @@
 <form name="visszajelzes" data-netlify="true" netlify-honeypot="bot-field" hidden>
   <input name="bot-field"><input name="tema"><input name="szakember"><input name="nev"><input name="elerhetoseg"><textarea name="uzenet"></textarea>
 </form>
-<script src="/assets/js/site.js" defer></script>
+<script src="/assets/js/site.js?v=20261003a" defer></script>
 </body>
 </html>

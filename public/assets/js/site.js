@@ -259,27 +259,38 @@
     }
     $('#gbMoreWrap').hidden = gbEntries.length <= gbShown;
   }
-  // csillagos értékelés: kattintásra az adott és az előtte lévő csillagok színeződnek be
+  // csillagos értékelés: a kattintott csillag és az előtte lévők színeződnek be
   let gbRating = 0;
-  const LABELS = ['', 'Nem voltam elégedett', 'Lehetett volna jobb', 'Jó volt', 'Nagyon jó volt', 'Kiváló!'];
-  const starBtns = [...document.querySelectorAll('#gbStars .star')];
+  const LABELS = ['', '1 / 5 · Nem voltam elégedett', '2 / 5 · Lehetett volna jobb', '3 / 5 · Jó volt', '4 / 5 · Nagyon jó volt', '5 / 5 · Kiváló!'];
+  const starBtns = [...document.querySelectorAll('#rate .rate-star')];
   const paintStars = n => starBtns.forEach((b, i) => b.classList.toggle('on', i < n));
   const setRating = n => {
     gbRating = n; paintStars(n);
     starBtns.forEach((b, i) => { b.setAttribute('aria-checked', String(i + 1 === n)); b.tabIndex = (n ? i + 1 === n : i === 0) ? 0 : -1; });
-    const lab = $('#gbStarsLabel'); lab.textContent = n ? LABELS[n] : 'Kattints a csillagokra'; lab.classList.toggle('set', !!n);
+    const t = $('#rateText'); t.textContent = n ? LABELS[n] : 'Kattints egy csillagra'; t.classList.toggle('set', !!n);
   };
+  setRating(0);
   starBtns.forEach((b, i) => {
     b.addEventListener('click', () => setRating(i + 1));
-    b.addEventListener('mouseenter', () => paintStars(i + 1));
+    b.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') paintStars(i + 1); });
     b.addEventListener('keydown', e => {
       const k = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
       if (!k) return; e.preventDefault();
-      const n = Math.min(5, Math.max(1, (gbRating || i + 1) + (gbRating ? k : 0)));
+      const n = Math.min(5, Math.max(1, gbRating ? gbRating + k : 1));
       setRating(n); starBtns[n - 1].focus();
     });
   });
-  $('#gbStars').addEventListener('mouseleave', () => paintStars(gbRating));
+  $('#rate').addEventListener('pointerleave', () => paintStars(gbRating));
+
+  // szakember-választó gombsor ("Nem kívánom megadni" is választható)
+  const pickers = {};
+  function makePicker(id) {
+    const box = $(id); let val = '';
+    const opts = [...CFG.specialists.map(s => [s.id, s.name]), ['', 'Nem kívánom megadni']];
+    const render = () => { box.replaceChildren(...opts.map(([v, lab]) => el('button', { type: 'button', role: 'radio', class: v ? '' : 'none', 'aria-checked': String(val === v), onclick: () => { val = v; render(); } }, lab))); };
+    render();
+    pickers[id] = { get value() { return val; }, get label() { return val ? opts.find(o => o[0] === val)[1] : 'Nem adta meg'; } };
+  }
   $('#gbMore').addEventListener('click', () => { gbShown += 6; renderGuestbook(); });
   const netlifyForm = (name, data) => fetch('/', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ 'form-name': name, ...data }).toString() }).catch(() => {});
   const thanks = (title, text) => el('div', { class: 'thanks' }, el('div', { class: 'ring' }, icon('check')), el('h3', {}, title), el('p', { class: 'muted', style: 'max-width:44ch' }, text));
@@ -294,8 +305,8 @@
     if (!$('#gbConsent').checked) { st.textContent = 'Fogadd el, hogy a bejegyzésed megjelenjen az oldalon.'; return; }
     btn.disabled = true; st.className = 'status'; st.textContent = 'Küldés…';
     try {
-      await api('/api/guestbook', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name, text, rating, spec: $('#gbSpec').value, consent: true, website: $('#gbWeb').value }) });
-      netlifyForm('vendegkonyv', { nev: name, ertekeles: String(rating), szakember: $('#gbSpec').selectedOptions[0]?.textContent || '', bejegyzes: text });
+      await api('/api/guestbook', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name, text, rating, spec: pickers['#gbSpec'].value, consent: true, website: $('#gbWeb').value }) });
+      netlifyForm('vendegkonyv', { nev: name, ertekeles: String(rating), szakember: pickers['#gbSpec'].label, bejegyzes: text });
       $('#gbForm').replaceWith(thanks('Köszönjük a kedves szavakat!', 'A bejegyzésedet hamarosan átnézzük, és utána megjelenik a vendégkönyvben.'));
     } catch (err) { btn.disabled = false; st.className = 'status err'; st.textContent = err.message; }
   });
@@ -316,10 +327,10 @@
     if (text.length < 5) { st.textContent = 'Írd le pár szóban a visszajelzésed.'; $('#fbText').focus(); return; }
     if (contact && !$('#fbConsent').checked) { st.textContent = 'Ha elérhetőséget adsz meg, fogadd el az adatkezelést.'; return; }
     btn.disabled = true; st.className = 'status'; st.textContent = 'Küldés…';
-    const data = { topic: fbTopic, spec: $('#fbSpec').value, name: $('#fbName').value.trim(), contact, text, consent: !!contact, website: $('#fbWeb').value };
+    const data = { topic: fbTopic, spec: pickers['#fbSpec'].value, name: $('#fbName').value.trim(), contact, text, consent: !!contact, website: $('#fbWeb').value };
     try {
       await api('/api/feedback', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) });
-      netlifyForm('visszajelzes', { tema: data.topic, szakember: $('#fbSpec').selectedOptions[0]?.textContent || '', nev: data.name, elerhetoseg: contact, uzenet: text });
+      netlifyForm('visszajelzes', { tema: data.topic, szakember: pickers['#fbSpec'].label, nev: data.name, elerhetoseg: contact, uzenet: text });
       $('#fbForm').replaceChildren(thanks('Köszönjük, megkaptuk!', contact ? 'Hamarosan jelentkezünk a megadott elérhetőségen.' : 'Minden visszajelzést elolvasunk, és sokat segít nekünk.'));
     } catch (err) { btn.disabled = false; st.className = 'status err'; st.textContent = err.message; }
   });
@@ -329,7 +340,7 @@
     try { CFG = await api('/api/config'); }
     catch { $('#team').replaceChildren(el('p', { class: 'status err' }, 'Az oldal betöltése nem sikerült. Frissítsd az oldalt.')); return; }
     renderTeam(); renderBooking(); renderGalFilter(); renderGallery();
-    for (const id of ['#gbSpec', '#fbSpec']) $(id).append(...CFG.specialists.map(s => el('option', { value: s.id }, s.name)));
+    makePicker('#gbSpec'); makePicker('#fbSpec');
     renderGuestbook();
     api('/api/guestbook').then(r => { gbEntries = r.entries || []; renderGuestbook(); }).catch(() => {});
     const pre = new URLSearchParams(location.search).get('szakember');

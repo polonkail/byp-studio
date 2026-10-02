@@ -218,7 +218,7 @@
       const del = el('button', { class: 'mini danger', type: 'button' }, 'Törlés');
       armed(del, 'Törlés', () => act('delete'));
       box.append(el('div', { class: 'item' + (x.read ? '' : ' unread') },
-        el('div', { class: 'item-top' }, el('span', {}, el('b', {}, x.topic), x.spec ? el('small', {}, ' · ' + specName(x.spec)) : el('small', {}, ' · egész stúdió')), el('small', {}, when(x.createdAt))),
+        el('div', { class: 'item-top' }, el('span', {}, el('b', {}, x.topic), x.spec ? el('small', {}, ' · ' + specName(x.spec)) : el('small', {}, ' · szakembert nem adott meg')), el('small', {}, when(x.createdAt))),
         el('p', {}, x.text),
         el('small', { class: 'muted' }, [x.name || 'Névtelen', x.contact].filter(Boolean).join(' · ')),
         el('div', { class: 'item-actions' }, el('button', { class: 'mini', type: 'button', onclick: () => act(x.read ? 'unread' : 'read') }, x.read ? 'Olvasatlannak jelöl' : 'Olvasottnak jelöl'), del)));
