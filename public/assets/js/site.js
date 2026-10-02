@@ -55,7 +55,7 @@
         el('ul', { class: 'svc-list' }, s.services.map(v => el('li', {}, v.name, el('span', {}, durTxt(v.dur))))),
         el('div', { class: 'member-foot' },
           el('a', { class: 'tel', href: 'tel:' + s.phone.replace(/\s/g, '') }, icon('phone'), s.phone),
-          el('a', { class: 'textlink', href: '#foglalas', onclick: () => selectSpec(s.id) }, 'Időpontot foglalok', icon('arrow-right')))));
+          el('a', { class: 'textlink', href: '/foglalas/?szakember=' + s.id }, 'Időpontot foglalok', icon('arrow-right')))));
     }
   }
 
@@ -91,9 +91,11 @@
   function showLb() { const it = lbList[lbIdx]; const s = it.spec && specById(it.spec); $('#lbImg').src = '/api/img/' + it.id; $('#lbImg').alt = it.caption || ''; $('#lbCap').textContent = [it.caption, s && s.name].filter(Boolean).join(' · '); }
   function closeLb() { lb.hidden = true; document.body.style.overflow = ''; }
   const step = d => { lbIdx = (lbIdx + d + lbList.length) % lbList.length; showLb(); };
+  if (lb) {
   $('#lbClose').onclick = closeLb; $('#lbPrev').onclick = () => step(-1); $('#lbNext').onclick = () => step(1);
   lb.addEventListener('click', e => { if (e.target === lb) closeLb(); });
-  addEventListener('keydown', e => { if (lb.hidden) return; if (e.key === 'Escape') closeLb(); if (e.key === 'ArrowLeft') step(-1); if (e.key === 'ArrowRight') step(1); });
+  }
+  addEventListener('keydown', e => { if (!lb || lb.hidden) return; if (e.key === 'Escape') closeLb(); if (e.key === 'ArrowLeft') step(-1); if (e.key === 'ArrowRight') step(1); });
 
   /* ---------- booking ---------- */
   const st = { spec: null, svc: null, date: null, time: null, month: null };
@@ -193,6 +195,7 @@
       el('div', {}, el('p', { class: 'when' }, `${fmtDay(st.date)}, ${st.time}–${toT(toMin(st.time) + V.dur)}`), el('p', { class: 'muted' }, `${V.name} · ${S.name}`)),
       el('button', { type: 'button', class: 'textlink', style: 'margin-left:auto', onclick: () => { st.time = null; renderSlots(); renderForm(); stepInfo(); $('#blkCal').scrollIntoView({ behavior: 'smooth', block: 'start' }); } }, 'Másik időpont'));
   }
+  if ($('#panel')) {
   $('#calPrev').onclick = () => { const [y, m] = st.month.split('-').map(Number); const d = new Date(y, m - 2, 1); st.month = ymd(d).slice(0, 7); st.time = null; renderCal(); renderForm(); stepInfo(); };
   $('#calNext').onclick = () => { const [y, m] = st.month.split('-').map(Number); const d = new Date(y, m, 1); st.month = ymd(d).slice(0, 7); st.time = null; renderCal(); renderForm(); stepInfo(); };
 
@@ -216,6 +219,7 @@
       if (err.code === 'taken' || err.code === 'too_soon') { st.time = null; loadAvail(); renderForm(); stepInfo(); }
     }
   });
+  }
   function showDone(b) {
     const S = specById(st.spec);
     document.querySelectorAll('#stepList li').forEach(li => { li.classList.add('done'); li.classList.remove('cur'); });
@@ -230,7 +234,7 @@
   }
 
   /* ---------- map (click to load) ---------- */
-  $('#mapLoad').addEventListener('click', () => {
+  $('#mapLoad')?.addEventListener('click', () => {
     $('#map').replaceChildren(el('iframe', { title: 'BYP Stúdió a térképen', loading: 'lazy', referrerpolicy: 'no-referrer-when-downgrade', src: 'https://www.google.com/maps?q=Hajd%C3%BAszoboszl%C3%B3,+Luther+u.+11&z=16&output=embed' }));
   });
 
@@ -267,7 +271,7 @@
   const setRating = n => {
     gbRating = n; paintStars(n);
     starBtns.forEach((b, i) => { b.setAttribute('aria-checked', String(i + 1 === n)); b.tabIndex = (n ? i + 1 === n : i === 0) ? 0 : -1; });
-    const t = $('#rateText'); t.textContent = n ? LABELS[n] : 'Kattints egy csillagra'; t.classList.toggle('set', !!n);
+    const t = $('#rateText'); if (!t) return; t.textContent = n ? LABELS[n] : 'Kattints egy csillagra'; t.classList.toggle('set', !!n);
   };
   setRating(0);
   starBtns.forEach((b, i) => {
@@ -280,7 +284,7 @@
       setRating(n); starBtns[n - 1].focus();
     });
   });
-  $('#rate').addEventListener('pointerleave', () => paintStars(gbRating));
+  $('#rate')?.addEventListener('pointerleave', () => paintStars(gbRating));
 
   // szakember-választó gombsor ("Nem kívánom megadni" is választható)
   const pickers = {};
@@ -291,10 +295,10 @@
     render();
     pickers[id] = { get value() { return val; }, get label() { return val ? opts.find(o => o[0] === val)[1] : 'Nem adta meg'; } };
   }
-  $('#gbMore').addEventListener('click', () => { gbShown += 6; renderGuestbook(); });
+  $('#gbMore')?.addEventListener('click', () => { gbShown += 6; renderGuestbook(); });
   const netlifyForm = (name, data) => fetch('/', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ 'form-name': name, ...data }).toString() }).catch(() => {});
   const thanks = (title, text) => el('div', { class: 'thanks' }, el('div', { class: 'ring' }, icon('check')), el('h3', {}, title), el('p', { class: 'muted', style: 'max-width:44ch' }, text));
-  $('#gbForm').addEventListener('submit', async e => {
+  $('#gbForm')?.addEventListener('submit', async e => {
     e.preventDefault();
     const st = $('#gbStatus'), btn = $('#gbSubmit'); st.className = 'status err';
     const name = $('#gbName').value.trim(), text = $('#gbText').value.trim();
@@ -315,12 +319,12 @@
   const TOPICS = ['Dicséret', 'Javaslat', 'Panasz', 'Kérdés', 'Egyéb'];
   let fbTopic = 'Javaslat';
   function renderTopics() {
-    const box = $('#fbTopics'); box.replaceChildren();
+    const box = $('#fbTopics'); if (!box) return; box.replaceChildren();
     for (const t of TOPICS) box.append(el('button', { type: 'button', class: 'fb-topic', role: 'radio', 'aria-checked': String(fbTopic === t), onclick: () => { fbTopic = t; renderTopics(); } }, t));
   }
   renderTopics();
-  $('#fbContact').addEventListener('input', () => { $('#fbConsentRow').hidden = !$('#fbContact').value.trim(); });
-  $('#fbForm').addEventListener('submit', async e => {
+  $('#fbContact')?.addEventListener('input', () => { $('#fbConsentRow').hidden = !$('#fbContact').value.trim(); });
+  $('#fbForm')?.addEventListener('submit', async e => {
     e.preventDefault();
     const st = $('#fbStatus'), btn = $('#fbSubmit'); st.className = 'status err';
     const text = $('#fbText').value.trim(), contact = $('#fbContact').value.trim();
@@ -338,13 +342,27 @@
   /* ---------- start ---------- */
   (async () => {
     try { CFG = await api('/api/config'); }
-    catch { $('#team').replaceChildren(el('p', { class: 'status err' }, 'Az oldal betöltése nem sikerült. Frissítsd az oldalt.')); return; }
-    renderTeam(); renderBooking(); renderGalFilter(); renderGallery();
-    makePicker('#gbSpec'); makePicker('#fbSpec');
-    renderGuestbook();
-    api('/api/guestbook').then(r => { gbEntries = r.entries || []; renderGuestbook(); }).catch(() => {});
-    const pre = new URLSearchParams(location.search).get('szakember');
-    if (pre && specById(pre)) selectSpec(pre);
-    try { images = (await api('/api/gallery')).images || []; renderGallery(); } catch {}
+    catch { const t = $('#team') || $('#panel') || $('#gal') || $('#gbList'); t?.replaceChildren(el('p', { class: 'status err' }, 'Az oldal betöltése nem sikerült. Frissítsd az oldalt.')); return; }
+    const has = id => !!$(id);
+    if (has('#team')) renderTeam();
+    if (has('#panel')) {
+      renderBooking();
+      const pre = new URLSearchParams(location.search).get('szakember');
+      if (pre && specById(pre)) selectSpec(pre);
+    }
+    if (has('#gbSpec')) makePicker('#gbSpec');
+    if (has('#fbSpec')) makePicker('#fbSpec');
+    if (has('#gbList') || has('#exGb')) {
+      if (has('#gbList')) renderGuestbook();
+      api('/api/guestbook').then(r => {
+        gbEntries = r.entries || [];
+        if (has('#gbList')) renderGuestbook();
+        if (has('#exGb') && gbEntries.length) { const avg = gbEntries.reduce((a, e) => a + e.rating, 0) / gbEntries.length; $('#exGb').textContent = `${avg.toFixed(1).replace('.', ',')} / 5 csillag, ${gbEntries.length} vendég véleménye alapján. Olvasd el, vagy írj te is.`; }
+      }).catch(() => {});
+    }
+    if (has('#gal')) {
+      renderGalFilter(); renderGallery();
+      try { images = (await api('/api/gallery')).images || []; renderGallery(); } catch {}
+    }
   })();
 })();

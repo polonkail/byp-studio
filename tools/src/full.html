@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BYP Studio · Szépségstúdió Hajdúszoboszló</title>
-<meta name="description" content="BYP Studio, Hajdúszoboszló: fodrászat, kézápolás, műköröm, pedikűr, szempilla-hosszabbítás és fülbelövés egy helyen. Foglalj időpontot online.">
+<title>BYP Stúdió · Szépségstúdió Hajdúszoboszló</title>
+<meta name="description" content="BYP Stúdió, Hajdúszoboszló: fodrászat, kézápolás, műköröm, pedikűr, szempilla-hosszabbítás és fülbelövés egy helyen. Foglalj időpontot online.">
 <meta name="theme-color" content="#141012">
 <meta property="og:title" content="BYP Stúdió · Szépséged a szenvedélyünk">
 <meta property="og:description" content="Fodrászat, köröm, pedikűr, szempilla és fülbelövés Hajdúszoboszlón. Online időpontfoglalás.">
@@ -67,18 +67,18 @@
 
 <header class="site-head" id="head">
   <div class="wrap">
-    <a class="logo" href="/" aria-label="BYP Studio, főoldal">
+    <a class="logo" href="#top" aria-label="BYP Stúdió, kezdőlap">
       <img class="logo-img" src="/assets/img/logo-monogram.png" alt="BYP Studio" width="74" height="62" style="height:62px;width:auto">
     </a>
     <nav class="nav" id="nav" aria-label="Fő menü">
-      <a href="/#rolunk">Rólunk</a>
-      <a href="/#szolgaltatasok">Szolgáltatások</a>
-      <a href="/galeria/">Galéria</a>
-      <a href="/vendegkonyv/">Vendégkönyv</a>
-      <a href="/foglalas/">Időpontfoglalás</a>
-      <a href="/#kapcsolat">Kapcsolat</a>
+      <a href="#rolunk">Rólunk</a>
+      <a href="#szolgaltatasok">Szolgáltatások</a>
+      <a href="#galeria">Galéria</a>
+      <a href="#vendegkonyv">Vendégkönyv</a>
+      <a href="#foglalas">Időpontfoglalás</a>
+      <a href="#kapcsolat">Kapcsolat</a>
     </nav>
-    <a class="btn line head-cta" href="/foglalas/" style="--b:var(--gold-lt)">Foglalás</a>
+    <a class="btn line head-cta" href="#foglalas" style="--b:var(--gold-lt)">Foglalás</a>
     <button class="burger" id="burger" aria-label="Menü" aria-expanded="false" aria-controls="nav"><svg class="ico"><use href="#i-menu"/></svg></button>
   </div>
 </header>
@@ -95,7 +95,7 @@
       <h1 class="rv">Szépséged a <em>szenvedélyünk</em></h1>
       <p class="lead rv">Négy szakember, egy stúdió. Hajtól a körmökig, a szempillától a pedikűrig: nyugodt környezetben, pontos munkával, előre egyeztetett időpontban.</p>
       <div class="hero-cta rv">
-        <a class="btn" href="/foglalas/"><svg class="ico"><use href="#i-calendar-days"/></svg>Időpontot foglalok</a>
+        <a class="btn" href="#foglalas"><svg class="ico"><use href="#i-calendar-days"/></svg>Időpontot foglalok</a>
         <a class="btn line" href="#szolgaltatasok">Szolgáltatásaink</a>
       </div>
       <div class="crafts rv">
@@ -133,31 +133,107 @@
     </div>
   </section>
 
-  <section class="sec explore" id="felfedezes">
+  <section class="sec on-dark marble-band" id="galeria">
     <div class="wrap">
       <div class="sec-head rv">
-        <p class="eyebrow">Fedezd fel</p>
-        <h2>Nézz be <em>hozzánk</em></h2>
+        <p class="eyebrow">Galéria</p>
+        <h2>Munkáink <em>közelről</em></h2>
       </div>
-      <div class="explore-grid rv">
-        <a class="ex-card" href="/galeria/">
-          <svg class="ico"><use href="#i-image"/></svg>
-          <span class="ex-t">Galéria</span>
-          <span class="ex-d">Frizurák, körmök, szempilla: nézd meg a munkáinkat közelről.</span>
-          <span class="textlink">Megnézem <svg class="ico"><use href="#i-arrow-right"/></svg></span>
-        </a>
-        <a class="ex-card" href="/vendegkonyv/">
+      <div class="chips rv" id="galFilter" role="group" aria-label="Szűrés szakterület szerint"></div>
+      <div id="gal"></div>
+    </div>
+  </section>
+
+  <section class="sec" id="vendegkonyv">
+    <div class="wrap">
+      <div class="gb-head rv">
+        <div class="sec-head" style="margin-bottom:0">
+          <p class="eyebrow">Vendégkönyv</p>
+          <h2>Akik már <em>nálunk</em> jártak</h2>
+        </div>
+        <div class="gb-score" id="gbScore" hidden></div>
+      </div>
+      <div class="gb-list rv" id="gbList"></div>
+      <div class="gb-more" id="gbMoreWrap" hidden><button class="btn line" type="button" id="gbMore">További bejegyzések</button></div>
+
+      <div class="gb-write rv">
+        <div class="gb-write-intro">
           <svg class="ico"><use href="#i-quote"/></svg>
-          <span class="ex-t">Vendégkönyv</span>
-          <span class="ex-d" id="exGb">Olvasd el, mit írtak rólunk a vendégeink, vagy írj te is.</span>
-          <span class="textlink">Elolvasom <svg class="ico"><use href="#i-arrow-right"/></svg></span>
-        </a>
-        <a class="ex-card dark" href="/foglalas/">
-          <svg class="ico"><use href="#i-calendar-days"/></svg>
-          <span class="ex-t">Időpontfoglalás</span>
-          <span class="ex-d">Válaszd ki a szakembert, a szolgáltatást és a szabad időpontot.</span>
-          <span class="textlink">Foglalok <svg class="ico"><use href="#i-arrow-right"/></svg></span>
-        </a>
+          <h3>Írj a vendégkönyvünkbe</h3>
+          <p class="muted">Örülünk minden kedves szónak. A bejegyzéseket megjelenés előtt átnézzük.</p>
+        </div>
+        <form class="gb-form" id="gbForm" novalidate>
+          <div class="rate-block">
+            <p class="choice-t" id="rateTitle">Hány csillagot adsz?</p>
+            <div class="rate" id="rate" role="radiogroup" aria-labelledby="rateTitle">
+              <button type="button" class="rate-star" data-v="1" role="radio" aria-checked="false" aria-label="1 csillag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93z"/></svg></button>
+              <button type="button" class="rate-star" data-v="2" role="radio" aria-checked="false" aria-label="2 csillag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93z"/></svg></button>
+              <button type="button" class="rate-star" data-v="3" role="radio" aria-checked="false" aria-label="3 csillag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93z"/></svg></button>
+              <button type="button" class="rate-star" data-v="4" role="radio" aria-checked="false" aria-label="4 csillag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93z"/></svg></button>
+              <button type="button" class="rate-star" data-v="5" role="radio" aria-checked="false" aria-label="5 csillag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93z"/></svg></button>
+              <span class="rate-text" id="rateText" aria-live="polite">Kattints egy csillagra</span>
+            </div>
+          </div>
+          <div class="form">
+            <label class="field"><span>Neved (ez jelenik meg)</span><input id="gbName" maxlength="60" autocomplete="given-name" placeholder="pl. Anna K."></label>
+            <div class="field wide"><span class="choice-t" id="gbSpecT">Kinél jártál?</span><div class="choice" id="gbSpec" role="radiogroup" aria-labelledby="gbSpecT"></div></div>
+            <label class="field wide"><span>Bejegyzésed</span><textarea id="gbText" maxlength="1000" placeholder="Milyen volt nálunk?"></textarea></label>
+            <label class="hp" aria-hidden="true">Weboldal<input id="gbWeb" tabindex="-1" autocomplete="off"></label>
+            <label class="check wide"><input type="checkbox" id="gbConsent"><span>Hozzájárulok, hogy a nevem és a bejegyzésem megjelenjen a BYP Stúdió honlapján.</span></label>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:center"><button class="btn" type="submit" id="gbSubmit">Bejegyzés küldése</button><p class="status" id="gbStatus" role="status"></p></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec silk" id="foglalas">
+    <div class="wrap">
+      <div class="sec-head center rv">
+        <p class="eyebrow">Online időpontfoglalás</p>
+        <h2>Válaszd ki a <em>te</em> időpontodat</h2>
+        <p class="lead">A naptárban zölddel látod a szabad időpontokat. Pár kattintás, és már várunk is.</p>
+      </div>
+      <div class="booker rv">
+        <aside class="steps" aria-label="Foglalás lépései">
+          <h3>Foglalásod</h3>
+          <ol id="stepList">
+            <li data-s="1"><span class="n">1</span><b>Szakember</b><span></span></li>
+            <li data-s="2"><span class="n">2</span><b>Szolgáltatás</b><span></span></li>
+            <li data-s="3"><span class="n">3</span><b>Időpont</b><span></span></li>
+            <li data-s="4"><span class="n">4</span><b>Adataid</b><span></span></li>
+          </ol>
+          <p class="help">Ha nem találsz megfelelő időpontot, hívd a szakembert közvetlenül. A telefonszámokat a szolgáltatásoknál találod.</p>
+        </aside>
+        <div class="panel" id="panel">
+          <div class="blk"><p class="blk-t">1 · Kihez szeretnél jönni?</p><div class="pick-spec" id="pickSpec"></div></div>
+          <div class="blk" id="blkSvc" hidden><p class="blk-t">2 · Melyik szolgáltatást kéred?</p><div class="pick-svc" id="pickSvc"></div></div>
+          <div class="blk" id="blkCal" hidden>
+            <div class="cal-head"><p class="blk-t">3 · Válassz napot és időpontot</p>
+              <div style="display:flex;align-items:center;gap:14px"><span class="cal-month" id="calMonth"></span>
+              <div class="cal-nav"><button id="calPrev" aria-label="Előző hónap"><svg class="ico"><use href="#i-chevron-left"/></svg></button><button id="calNext" aria-label="Következő hónap"><svg class="ico"><use href="#i-chevron-right"/></svg></button></div></div>
+            </div>
+            <div class="days" id="days"></div>
+            <div class="legend"><span><i style="background:var(--free-soft);border:1px solid var(--free)"></i>szabad</span><span><i style="background:var(--taken)"></i>foglalt</span><span id="dayHours"></span></div>
+            <div class="slots" id="slots"></div>
+          </div>
+          <form class="blk" id="blkForm" hidden novalidate>
+            <p class="blk-t">4 · Adataid</p>
+            <div class="summary" id="summary"></div>
+            <div class="form">
+              <label class="field"><span>Név</span><input id="fName" name="name" autocomplete="name" required maxlength="80"></label>
+              <label class="field"><span>Telefonszám</span><input id="fPhone" name="phone" type="tel" autocomplete="tel" required placeholder="+36 30 123 4567" maxlength="30"></label>
+              <label class="field wide"><span>E-mail (nem kötelező)</span><input id="fEmail" name="email" type="email" autocomplete="email" maxlength="120"></label>
+              <label class="field wide"><span>Megjegyzés (nem kötelező)</span><textarea id="fNote" name="note" maxlength="500" placeholder="Pl. hosszú, festett haj; első alkalom"></textarea></label>
+              <label class="hp" aria-hidden="true">Weboldal<input id="fWeb" name="website" tabindex="-1" autocomplete="off"></label>
+              <label class="check wide"><input type="checkbox" id="fConsent" required><span>Hozzájárulok, hogy a BYP Stúdió a megadott adataimat az időpontfoglalás kezelése céljából tárolja, és szükség esetén felvegye velem a kapcsolatot.</span></label>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:center">
+              <button class="btn" type="submit" id="fSubmit"><svg class="ico"><use href="#i-calendar-check"/></svg>Foglalás véglegesítése</button>
+              <p class="status" id="fStatus" role="status"></p>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   </section>
@@ -225,6 +301,13 @@
     <span><a href="/adatkezeles.html">Adatkezelési tájékoztató</a></span>
   </div>
 </footer>
+
+<div class="lightbox" id="lb" hidden role="dialog" aria-modal="true" aria-label="Kép nagyítva">
+  <button class="lb-btn lb-close" id="lbClose" aria-label="Bezárás"><svg class="ico"><use href="#i-x"/></svg></button>
+  <button class="lb-btn lb-prev" id="lbPrev" aria-label="Előző kép"><svg class="ico"><use href="#i-chevron-left"/></svg></button>
+  <button class="lb-btn lb-next" id="lbNext" aria-label="Következő kép"><svg class="ico"><use href="#i-chevron-right"/></svg></button>
+  <figure style="margin:0"><img id="lbImg" alt=""><p id="lbCap"></p></figure>
+</div>
 
 <!-- Netlify Forms: e-mail értesítés új foglalásról (a Netlify felületén kapcsolható be) -->
 <form name="foglalas" data-netlify="true" netlify-honeypot="bot-field" hidden>

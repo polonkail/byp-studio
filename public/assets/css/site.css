@@ -320,6 +320,33 @@ p{margin:0}
 .thanks h3{font-size:2rem;font-weight:400}
 @media (max-width:860px){ .fb{grid-template-columns:1fr} }
 
+/* subpages */
+.page-hero{position:relative;background:var(--noir) url("../img/marble-noir.webp") center 30%/cover no-repeat;color:#f4ede6;padding:calc(150px + env(safe-area-inset-top,0px)) 0 clamp(56px,7vw,90px)}
+.page-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,16,18,.6),rgba(20,16,18,.2) 45%,rgba(20,16,18,.7));pointer-events:none}
+.page-hero .wrap{position:relative;z-index:1;display:grid;gap:22px}
+.page-hero h1{font-size:clamp(2.8rem,7vw,5.6rem);font-weight:300;line-height:1}
+.page-hero h1 em{color:var(--gold-lt)}
+.page-hero .lead{color:#cfc4bb}
+@media (max-width:700px){ .page-hero{background-image:url("../img/marble-noir-sm.webp");padding-top:calc(120px + env(safe-area-inset-top,0px))} }
+.page-first{padding-top:clamp(40px,5vw,64px)}
+.page-hero + .sec{padding-top:clamp(48px,6vw,80px)}
+.nav a[aria-current="page"]{opacity:1;color:var(--gold-lt)}
+@media (min-width:981px){ .nav a[aria-current="page"]{box-shadow:0 1px 0 var(--gold-lt)} }
+
+/* explore cards (főoldal) */
+.explore{background:var(--paper)}
+.explore-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:rgba(34,28,30,.1);border:1px solid rgba(34,28,30,.1)}
+.ex-card{background:var(--paper);padding:clamp(30px,4vw,48px);display:grid;gap:16px;align-content:start;text-decoration:none;transition:background .35s}
+.ex-card > .ico{font-size:2.4rem;color:var(--gold);stroke-width:1}
+.ex-t{font-family:var(--f-display);font-size:2rem;line-height:1.1}
+.ex-d{color:var(--stone);min-height:3.2em}
+.ex-card:hover{background:#fff}
+.ex-card:hover .textlink{text-decoration:underline;text-underline-offset:5px}
+.ex-card.dark{background:var(--noir) url("../img/marble-band-sm.webp") center/cover;color:#f4ede6}
+.ex-card.dark .ex-d{color:#b9ada4}
+.ex-card.dark > .ico,.ex-card.dark .textlink{color:var(--gold-lt)}
+@media (max-width:860px){ .explore-grid{grid-template-columns:1fr} .ex-d{min-height:0} }
+
 .site-foot{background:#0e0b0c;color:#8f847d;font-size:.8rem;padding-block:34px calc(34px + env(safe-area-inset-bottom,0px))}
 .site-foot .wrap{display:flex;flex-wrap:wrap;gap:12px 30px;justify-content:space-between;align-items:center}
 .site-foot{padding-top:56px}
