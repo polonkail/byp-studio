@@ -65,4 +65,4 @@ A GitHub repositoryban **Add file → Upload files**, húzd be újra a kicsomago
 Mindkét naptárhoz ugyanaz az egy szolgáltatásfiók (és ugyanaz a JSON) használható.
 
 ## Messenger-linkek
-`netlify/lib/config.mjs` → Löki Andrea (m.me/ancsii23) és Német-Kotyuga Viktória (egyelőre a Facebook-profilja: facebook.com/viktoria.kotyuga) `messenger:` sora.
+`netlify/lib/config.mjs` → Löki Andrea (facebook.com/ancsii23) és Német-Kotyuga Viktória (facebook.com/viktoria.kotyuga) – a Facebook-profiljukra mutat `messenger:` sora.

@@ -93,7 +93,7 @@ export const SPECIALISTS = [
   {
     id: 'andrea', name: 'Löki Andrea', role: 'Szempilla és fülbelövés', icon: 'lash', phone: '+36 30 608 2304',
     // Időpont-egyeztetés Messengeren (online naptár helyett): https://m.me/<felhasználónév>
-    booking: 'messenger', messenger: 'https://m.me/ancsii23',
+    booking: 'messenger', messenger: 'https://www.facebook.com/ancsii23',
     hours: DEFAULT_HOURS,
     services: [
       { id: 'szempilla', name: 'Szempilla-hosszabbítás', dur: 120 },
