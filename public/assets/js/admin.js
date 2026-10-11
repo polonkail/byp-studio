@@ -64,6 +64,7 @@
     if (t === 'statisztika') { renderVisits(); loadStats(); loadVisits(); }
     if (t === 'galeria') loadImages();
     if (t === 'foglalasok') loadBookings();
+    if (t === 'zaras') loadSched();
     if (t === 'vendegkonyv') loadGb();
     if (t === 'visszajelzes') loadFb();
     loadCounts();
@@ -330,7 +331,7 @@
 
   /* ---------- naptár ---------- */
   const DAY_S = 7 * 60, DAY_E = 20 * 60, SLOT = 30, RH = 44;
-  let calDate = ymdL(new Date()), calSpec = 'all', calBookings = [];
+  let calDate = ymdL(new Date()), calSpec = 'all', calBookings = [], calG = {};
   const yPos = m => (m - DAY_S) / SLOT * RH;
   async function loadCal() {
     $('#calDate').value = calDate;
@@ -338,7 +339,8 @@
     $('#calTitle').textContent = (isToday ? 'Ma, ' : '') + d.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric', weekday: 'long' });
     $('#calSpecs').replaceChildren(...[['all', 'Mindenki'], ...CFG.specialists.map(s => [s.id, s.short || s.name])].map(([k, l]) => el('button', { class: 'fchip', type: 'button', 'aria-pressed': String(calSpec === k), onclick: () => { calSpec = k; renderCal(); } }, l)));
     renderCal();
-    try { calBookings = (await api(`/api/admin/bookings?from=${calDate}&to=${calDate}`)).bookings; renderCal(); }
+    calG = {};
+    try { calBookings = (await api(`/api/admin/bookings?from=${calDate}&to=${calDate}`)).bookings; renderCal(); api(`/api/admin/gbusy?date=${calDate}`).then(r => { calG = r.busy || {}; renderCal(); }).catch(() => {}); }
     catch (e) { if (e.message !== 'unauthorized') alertMsg(e.message); }
   }
   function renderCal() {
@@ -362,7 +364,15 @@
         col.append(el('div', { class: 'cal-off', style: `top:${yPos(toMinA(hrs[1]))}px;height:${Math.max(0, H - yPos(toMinA(hrs[1])))}px` }));
       }
       if (calDate === ymdL(new Date()) && nowM > DAY_S && nowM < DAY_E) col.append(el('div', { class: 'cal-now', style: `top:${yPos(nowM)}px` }));
-      for (const b of calBookings.filter(x => x.spec === s.id)) {
+      const own = calBookings.filter(x => x.spec === s.id);
+      for (const g of calG[s.id] || []) {
+        if (own.some(b => b.start === g.start && b.dur === g.dur)) continue; // a weboldalról felírt esemény
+        const top = yPos(Math.max(DAY_S, toMinA(g.start))), h = Math.max(22, yPos(Math.min(DAY_E, toMinA(g.start) + g.dur)) - top - 2);
+        if (toMinA(g.start) + g.dur <= DAY_S || toMinA(g.start) >= DAY_E) continue;
+        col.append(el('button', { type: 'button', class: 'cal-ev gcal', style: `top:${top}px;height:${h}px`, onclick: e => { e.stopPropagation(); openModal('Google Naptár', el('p', {}, `${s.name} Google Naptárában ebben az időszakban (${g.start}–${toTA(toMinA(g.start) + g.dur)}) foglalt bejegyzés van. Ezt a Google Naptárban tudod módosítani; ide online foglalás nem érkezhet.`)); } },
+          el('b', {}, `${g.start}–${toTA(toMinA(g.start) + g.dur)} Google Naptár`), el('small', {}, 'foglalt')));
+      }
+      for (const b of own) {
         const kind = b.type === 'block' ? 'block' : (b.source === 'telefon' ? 'telefon' : 'online');
         const top = yPos(Math.max(DAY_S, toMinA(b.start))), h = Math.max(22, yPos(Math.min(DAY_E, toMinA(b.end))) - top - 2);
         col.append(el('button', { type: 'button', class: 'cal-ev ' + kind, style: `top:${top}px;height:${h}px`, onclick: e => { e.stopPropagation(); showBooking(b); } },
@@ -454,6 +464,49 @@
   $('#calToday').addEventListener('click', () => { calDate = ymdL(new Date()); loadCal(); });
   $('#calDate').addEventListener('change', e => { if (e.target.value) { calDate = e.target.value; loadCal(); } });
   $('#calNew').addEventListener('click', () => newBooking({ spec: calSpec === 'all' ? CFG.specialists[0].id : calSpec, date: calDate, start: '10:00' }));
+
+  /* ---------- heti munkarend ---------- */
+  const DAYS = [[1, 'Hétfő'], [2, 'Kedd'], [3, 'Szerda'], [4, 'Csütörtök'], [5, 'Péntek'], [6, 'Szombat'], [0, 'Vasárnap']];
+  let sched = null, schedSpec = null, schedEdit = null;
+  async function loadSched() {
+    try { sched = (await api('/api/admin/schedule')).schedule; } catch (e) { if (e.message !== 'unauthorized') $('#schedMsg').textContent = e.message; return; }
+    if (!schedSpec) schedSpec = CFG.specialists[0].id;
+    pickSched(schedSpec);
+  }
+  function pickSched(id) {
+    schedSpec = id;
+    schedEdit = JSON.parse(JSON.stringify(sched[id].hours || {}));
+    $('#schedSpecs').replaceChildren(...CFG.specialists.map(s => el('button', { class: 'fchip', type: 'button', 'aria-pressed': String(s.id === id), onclick: () => pickSched(s.id) }, s.short || s.name)));
+    $('#schedMsg').textContent = '';
+    renderSched();
+  }
+  function renderSched() {
+    const def = sched[schedSpec].defaults;
+    $('#schedRows').replaceChildren(...DAYS.map(([d, name]) => {
+      const on = !!schedEdit[d];
+      const h = schedEdit[d] || def[d] || ['09:00', '17:00'];
+      const chk = el('input', { type: 'checkbox', checked: on, 'aria-label': name + ' munkanap' });
+      const from = el('input', { type: 'time', value: h[0], step: '1800', 'aria-label': name + ' kezdés' });
+      const to = el('input', { type: 'time', value: h[1], step: '1800', 'aria-label': name + ' befejezés' });
+      const label = el('span', {}, on ? 'Dolgozik' : 'Szabadnap');
+      chk.addEventListener('change', () => { schedEdit[d] = chk.checked ? [from.value, to.value] : null; if (!chk.checked) delete schedEdit[d]; renderSched(); });
+      const upd = () => { if (chk.checked) schedEdit[d] = [from.value, to.value]; };
+      from.addEventListener('change', upd); to.addEventListener('change', upd);
+      return el('div', { class: 'sched-row' + (on ? '' : ' off') }, el('b', {}, name), el('label', { class: 'sw' }, chk, el('i'), label),
+        el('div', { class: 'sched-times' }, from, el('span', { class: 'muted' }, '–'), to));
+    }));
+  }
+  $('#schedSave').addEventListener('click', async () => {
+    const msg = $('#schedMsg'); msg.className = 'status'; msg.style.color = ''; msg.textContent = 'Mentés…';
+    try {
+      const r = await post('/api/admin/schedule', { spec: schedSpec, hours: schedEdit });
+      sched[schedSpec].hours = JSON.parse(JSON.stringify(schedEdit));
+      const sp = CFG.specialists.find(s => s.id === schedSpec); if (sp) sp.hours = JSON.parse(JSON.stringify(schedEdit));
+      msg.style.color = 'var(--free)';
+      msg.textContent = 'Elmentve. ' + (r.conflicts.length ? `Figyelem: ezeken a mostantól szabadnapokon már van foglalás: ${r.conflicts.map(fmtDay).join(', ')}. Ezeket egyeztesd a vendéggel.` : 'Az online foglalás már az új munkarend szerint működik.');
+    } catch (e) { msg.className = 'status err'; msg.textContent = e.message; }
+  });
+  $('#schedReset').addEventListener('click', () => { schedEdit = JSON.parse(JSON.stringify(sched[schedSpec].defaults)); renderSched(); $('#schedMsg').textContent = 'Visszaállítva az alapértelmezésre – a mentéshez kattints a „Munkarend mentése” gombra.'; });
 
   if (PW) api('/api/admin/login', { method: 'POST' }).then(enter).catch(() => {});
 })();

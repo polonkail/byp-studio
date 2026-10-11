@@ -1,0 +1,116 @@
+// Google Naptár szinkron (szolgáltatásfiókkal, külső csomag nélkül).
+// Beállítás a Netlify környezeti változóiban:
+//   GOOGLE_SERVICE_ACCOUNT  – a Google Cloudban letöltött szolgáltatásfiók-kulcs teljes JSON tartalma
+//   GCAL_PETRA              – a naptár azonosítója, pl. decseipetra01@gmail.com
+// A naptárat meg kell osztani a szolgáltatásfiók e-mail-címével „Módosíthatja az eseményeket” joggal.
+import { createSign } from 'node:crypto';
+import { SALON } from './config.mjs';
+
+let cachedToken = null, tokenExp = 0;
+const b64url = buf => Buffer.from(buf).toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+
+function account() {
+  const raw = process.env.GOOGLE_SERVICE_ACCOUNT;
+  if (!raw) return null;
+  try { const j = JSON.parse(raw); return j.client_email && j.private_key ? { email: j.client_email, key: j.private_key.replace(/\\n/g, '\n') } : null; }
+  catch { console.error('gcal: GOOGLE_SERVICE_ACCOUNT nem érvényes JSON'); return null; }
+}
+export const calendarFor = specId => process.env['GCAL_' + String(specId).toUpperCase()] || null;
+export const gcalEnabled = specId => !!(calendarFor(specId) && account());
+
+async function token() {
+  if (cachedToken && Date.now() < tokenExp - 60000) return cachedToken;
+  const acc = account();
+  const now = Math.floor(Date.now() / 1000);
+  const head = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const claim = b64url(JSON.stringify({ iss: acc.email, scope: 'https://www.googleapis.com/auth/calendar', aud: 'https://oauth2.googleapis.com/token', iat: now, exp: now + 3600 }));
+  const sig = b64url(createSign('RSA-SHA256').update(`${head}.${claim}`).sign(acc.key));
+  const r = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: `${head}.${claim}.${sig}` }),
+  });
+  const d = await r.json();
+  if (!r.ok) throw new Error('gcal token: ' + (d.error_description || d.error || r.status));
+  cachedToken = d.access_token; tokenExp = Date.now() + d.expires_in * 1000;
+  return cachedToken;
+}
+async function call(method, path, body) {
+  const r = await fetch('https://www.googleapis.com/calendar/v3' + path, {
+    method, headers: { authorization: 'Bearer ' + await token(), 'content-type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (r.status === 204) return null;
+  const d = await r.json().catch(() => null);
+  if (!r.ok) { const e = new Error('gcal ' + method + ' ' + r.status + ': ' + (d?.error?.message || '')); e.status = r.status; throw e; }
+  return d;
+}
+
+// A Google-esemény azonosítója a foglalás azonosítójából képződik (így törölni is tudjuk tárolás nélkül).
+export const eventId = bookingId => 'bk' + Buffer.from(bookingId).toString('hex'); // csak a 0-9 és a-v karakterek engedélyezettek
+
+/** Foglalás vagy lezárás felírása a szakember Google Naptárába. Hiba esetén csak naplóz. */
+export async function gcalPush(b) {
+  const cal = calendarFor(b.spec);
+  if (!cal || !account()) return;
+  const tz = SALON.timeZone;
+  const isBlock = b.type === 'block';
+  const lines = isBlock ? [b.note || 'Lezárt időszak'] : [
+    `Szolgáltatás: ${b.svcName}`, b.price ? `Várható ár: ${b.price}` : '', `Vendég: ${b.name}`, b.phone ? `Telefon: ${b.phone}` : '',
+    b.email ? `E-mail: ${b.email}` : '', b.note ? `Megjegyzés: ${b.note}` : '', `Forrás: ${b.source === 'telefon' ? 'telefonos foglalás' : 'online foglalás (bypstudio.hu)'}`,
+  ];
+  const ev = {
+    id: eventId(b.id),
+    summary: isBlock ? `Zárva${b.note ? ': ' + b.note : ''}` : `${b.name} – ${(b.items || []).map(i => i.name).join(' + ') || b.svcName}`,
+    description: lines.filter(Boolean).join('\n'),
+    start: { dateTime: `${b.date}T${b.start}:00`, timeZone: tz },
+    end: { dateTime: `${b.date}T${b.end}:00`, timeZone: tz },
+    colorId: isBlock ? '8' : (b.source === 'telefon' ? '2' : '5'),
+    reminders: { useDefault: true },
+  };
+  try { await call('POST', `/calendars/${encodeURIComponent(cal)}/events`, ev); }
+  catch (e) {
+    if (e.status === 409) { try { await call('PUT', `/calendars/${encodeURIComponent(cal)}/events/${ev.id}`, ev); } catch (e2) { console.error(e2.message); } }
+    else console.error(e.message);
+  }
+}
+
+/** Esemény törlése (lemondáskor). */
+export async function gcalRemove(specId, bookingId) {
+  const cal = calendarFor(specId);
+  if (!cal || !account()) return;
+  try { await call('DELETE', `/calendars/${encodeURIComponent(cal)}/events/${eventId(bookingId)}`); }
+  catch (e) { if (e.status !== 404 && e.status !== 410) console.error(e.message); }
+}
+
+// UTC időpont → szalon helyi dátum + perc
+function local(iso) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: SALON.timeZone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+    .formatToParts(new Date(iso)).map(x => [x.type, x.value]));
+  return { date: `${p.year}-${p.month}-${p.day}`, min: Number(p.hour) * 60 + Number(p.minute) };
+}
+const pad = n => String(n).padStart(2, '0');
+const hhmm = m => pad(Math.floor(m / 60)) + ':' + pad(m % 60);
+
+/** A Google Naptárban foglalt idősávok (pl. Petra saját bejegyzései) napokra bontva: { 'YYYY-MM-DD': [{start, dur}] } */
+export async function gcalBusy(specId, fromDate, toDate) {
+  const cal = calendarFor(specId);
+  if (!cal || !account()) return {};
+  const off = d => new Date(`${d}T00:00:00Z`);
+  const timeMin = new Date(off(fromDate).getTime() - 2 * 3600e3).toISOString();
+  const timeMax = new Date(off(toDate).getTime() + 26 * 3600e3).toISOString();
+  let d;
+  try { d = await call('POST', '/freeBusy', { timeMin, timeMax, timeZone: SALON.timeZone, items: [{ id: cal }] }); }
+  catch (e) { console.error(e.message); return {}; }
+  const out = {};
+  for (const iv of d?.calendars?.[cal]?.busy || []) {
+    let s = local(iv.start), e = local(iv.end);
+    // több napos eseményt napokra bontjuk
+    while (s.date < e.date) {
+      (out[s.date] ||= []).push({ start: hhmm(s.min), dur: 24 * 60 - s.min });
+      const nd = new Date(`${s.date}T12:00:00Z`); nd.setUTCDate(nd.getUTCDate() + 1);
+      s = { date: nd.toISOString().slice(0, 10), min: 0 };
+    }
+    if (e.min > s.min) (out[s.date] ||= []).push({ start: hhmm(s.min), dur: e.min - s.min });
+  }
+  return out;
+}

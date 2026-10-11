@@ -1,6 +1,7 @@
 // Közös foglalási logika: szolgáltatások ellenőrzése, időpont lefoglalása, statisztika.
 import { store, mutateJSON, monthKey, newId, toMin, toT, overlaps, HttpError } from './util.mjs';
 import { LENGTHS } from './config.mjs';
+import { gcalPush } from './gcal.mjs';
 
 export const ft = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' Ft';
 
@@ -55,6 +56,7 @@ export async function createBooking({ s, date, start, dur, resolved, contact, so
   };
   await store('bookings').setJSON(`${date}/${s.id}/${id}`, booking);
   await addStat(booking);
+  await gcalPush(booking);
   return booking;
 }
 

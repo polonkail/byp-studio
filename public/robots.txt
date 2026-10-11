@@ -3,4 +3,4 @@ Allow: /
 Disallow: /feltoltes/
 Disallow: /api/
 
-Sitemap: https://byp-studio.hu/sitemap.xml
+Sitemap: https://bypstudio.hu/sitemap.xml

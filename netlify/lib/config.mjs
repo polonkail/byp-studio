@@ -92,6 +92,8 @@ export const SPECIALISTS = [
   },
   {
     id: 'andrea', name: 'Löki Andrea', role: 'Szempilla és fülbelövés', icon: 'lash', phone: '+36 30 608 2304',
+    // Időpont-egyeztetés Messengeren (online naptár helyett): https://m.me/<felhasználónév>
+    booking: 'messenger', messenger: 'https://m.me/ancsii23',
     hours: DEFAULT_HOURS,
     services: [
       { id: 'szempilla', name: 'Szempilla-hosszabbítás', dur: 120 },
@@ -100,6 +102,7 @@ export const SPECIALISTS = [
   },
   {
     id: 'viktoria', name: 'Német-Kotyuga Viktória', short: 'Kotyuga Viktória', role: 'Zselés és műköröm', icon: 'polish', phone: '+36 30 845 4499',
+    booking: 'messenger', messenger: 'https://m.me/viktoria.kotyuga',
     hours: DEFAULT_HOURS,
     services: [
       { id: 'kez', name: 'Kézápolás', dur: 45 },

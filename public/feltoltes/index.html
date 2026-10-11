@@ -9,7 +9,7 @@
 <link rel="icon" href="/assets/img/favicon-512.png" type="image/png" sizes="512x512">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <link rel="preload" href="/assets/fonts/cormorant-garamond-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/css/site.css?v=20261012a">
+<link rel="stylesheet" href="/assets/css/site.css?v=20261021a">
 <style>
 body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fixed}
 .adm-head{background:var(--noir);color:#f4ede6;padding-top:env(safe-area-inset-top,0px)}
@@ -79,6 +79,8 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
 .lg.telefon{background:#dfe9e3;border-left:3px solid var(--free)}
 .lg.block{background:repeating-linear-gradient(135deg,#e6e0da 0 4px,#f4f0eb 4px 8px)}
 .lg.off{background:#ece8e4}
+.lg.gcal{background:#e3e8f3;border-left:3px solid #4a6aa8}
+.cal-ev.gcal{background:#e3e8f3;border-left:3px solid #4a6aa8;opacity:.9}
 .cal-scroll{overflow-x:auto;border:1px solid rgba(34,28,30,.12);background:#fff}
 .cal-grid{display:grid;grid-template-columns:56px repeat(var(--cols,1),minmax(150px,1fr));min-width:fit-content;position:relative}
 .cal-colhead{position:sticky;top:0;z-index:3;background:var(--noir);color:#f4ede6;padding:10px 8px;font-size:.78rem;letter-spacing:.08em;text-align:center;border-left:1px solid rgba(255,255,255,.08)}
@@ -132,6 +134,22 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
 .stable tfoot td{font-weight:500;border-top:1px solid rgba(34,28,30,.3)}
 .stable .cat{font-size:.7rem;color:var(--stone)}
 .small{font-size:.85rem}
+.sched{display:grid;gap:0;border:1px solid rgba(34,28,30,.1);background:#fff}
+.sched-row{display:grid;grid-template-columns:150px auto 1fr;gap:10px 18px;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(34,28,30,.08)}
+.sched-row:last-child{border-bottom:0}
+.sched-row.off{background:repeating-linear-gradient(135deg,#f6f2ee 0 8px,#fbf9f6 8px 16px)}
+.sched-row b{font-family:var(--f-display);font-size:1.2rem;font-weight:500}
+.sw{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-size:.88rem;user-select:none}
+.sw input{position:absolute;opacity:0;width:1px;height:1px}
+.sw i{width:44px;height:26px;border-radius:13px;background:#d8d1ca;position:relative;transition:.2s;flex:none}
+.sw i::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.sw input:checked + i{background:var(--free)}
+.sw input:checked + i::after{left:21px}
+.sw input:focus-visible + i{outline:1.5px solid var(--gold);outline-offset:2px}
+.sched-times{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sched-times input{font:inherit;border:1px solid rgba(34,28,30,.2);padding:6px 8px;background:#fff}
+.sched-row.off .sched-times{opacity:.35;pointer-events:none}
+@media (max-width:620px){ .sched-row{grid-template-columns:1fr auto} .sched-times{grid-column:1/-1} }
 </style>
 </head>
 <body>
@@ -181,7 +199,7 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
   <path d="M4 12h16" />
   <path d="M4 19h16" /></symbol><symbol id="i-quote" viewBox="0 0 24 24"><path d="M16 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 1 1 0 0 1 1 1v1a2 2 0 0 1-2 2 1 1 0 0 0-1 1v2a1 1 0 0 0 1 1 6 6 0 0 0 6-6V5a2 2 0 0 0-2-2z" />
   <path d="M5 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 1 1 0 0 1 1 1v1a2 2 0 0 1-2 2 1 1 0 0 0-1 1v2a1 1 0 0 0 1 1 6 6 0 0 0 6-6V5a2 2 0 0 0-2-2z" /></symbol><symbol id="i-message" viewBox="0 0 24 24"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719" /></symbol><symbol id="i-leaf" viewBox="0 0 24 24"><path d="M11 20a10 10 0 0010-10 25.9 25.9 0 00-1.04-7.281 1 1 0 00-1.755-.325C15.833 5.5 13 5.5 9.8 6.1A7 7 0 0011 20" />
-  <path d="M2 21a5 5 0 012.911-4.544C7.613 15.212 8.351 15.24 11 13" /></symbol><symbol id="i-droplet" viewBox="0 0 24 24"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" /></symbol></svg><!--SPRITE:END-->
+  <path d="M2 21a5 5 0 012.911-4.544C7.613 15.212 8.351 15.24 11 13" /></symbol><symbol id="i-droplet" viewBox="0 0 24 24"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" /></symbol><symbol id="i-messenger" viewBox="0 0 24 24"><path d="M12 2.6c-5.3 0-9.4 3.9-9.4 8.9 0 2.8 1.3 5.3 3.4 6.9v3.3l3.1-1.7c.9.2 1.9.4 2.9.4 5.3 0 9.4-3.9 9.4-8.9S17.3 2.6 12 2.6z"/><path d="m6.9 14.1 3.3-3.5 2.3 2.2 4.1-4.4-3.3 3.5-2.3-2.2z" fill="currentColor"/></symbol></svg><!--SPRITE:END-->
 <header class="adm-head">
   <div class="wrap">
     <a class="logo" href="/" aria-label="BYP Studio, főoldal"><img class="logo-img" src="/assets/img/logo-monogram.png" alt="BYP Studio" width="74" height="62" style="height:62px;width:auto"><span class="logo-word"><small>Kezelőfelület</small></span></a>
@@ -224,7 +242,7 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
       </div>
       <div class="chip-row" id="calSpecs"></div>
       <p class="muted small">Koppints egy üres sávra az időpont rögzítéséhez, vagy egy foglalásra a részletekért.</p>
-      <div class="cal-legend"><span><i class="lg online"></i>Online foglalás</span><span><i class="lg telefon"></i>Telefonos foglalás</span><span><i class="lg block"></i>Lezárva</span><span><i class="lg off"></i>Munkaidőn kívül</span></div>
+      <div class="cal-legend"><span><i class="lg online"></i>Online foglalás</span><span><i class="lg telefon"></i>Telefonos foglalás</span><span><i class="lg block"></i>Lezárva</span><span><i class="lg gcal"></i>Google Naptár</span><span><i class="lg off"></i>Munkaidőn kívül</span></div>
       <div class="cal-scroll"><div class="cal-grid" id="calGrid"></div></div>
     </div>
   </section>
@@ -285,6 +303,13 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
 
   <!-- blocks -->
   <section id="tab-zaras" hidden>
+    <div class="card" id="schedCard">
+      <div style="display:grid;gap:10px"><p class="eyebrow">Heti munkarend</p><h2>Munkanapok és szabadnapok</h2>
+        <p class="muted">Állítsd be szakemberenként, mely napokon dolgozik és hány órától hány óráig. A szabadnapokra a vendégek nem tudnak online foglalni, és a naptárban is szürkén jelennek meg. Ez minden hétre érvényes; egy-egy alkalmi szabadságot lent tudsz lezárni.</p></div>
+      <div class="chip-row" id="schedSpecs"></div>
+      <div class="sched" id="schedRows"></div>
+      <div class="item-actions"><button class="btn" type="button" id="schedSave">Munkarend mentése</button><button class="mini" type="button" id="schedReset">Alapértelmezés visszaállítása</button><p class="status" id="schedMsg" role="status"></p></div>
+    </div>
     <form class="card" id="blockForm">
       <p class="eyebrow">Szabadság, zárás</p>
       <h2>Időszak lezárása</h2>
@@ -325,6 +350,6 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
     <div id="modalBody"></div>
   </div>
 </div>
-<script src="/assets/js/admin.js?v=20261012a" defer></script>
+<script src="/assets/js/admin.js?v=20261021a" defer></script>
 </body>
 </html>

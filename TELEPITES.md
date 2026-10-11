@@ -43,10 +43,26 @@ A GitHub repositoryban **Add file → Upload files**, húzd be újra a kicsomago
 - A háttérképek a `tools/gen_bg.py` szkripttel készültek; saját fotóra cserélhetők a `public/assets/img` mappában.
 
 ## Google kereső
-- `public/sitemap.xml` és `public/robots.txt` a https://byp-studio.hu címre van beállítva. Ha más lesz a domain, ebben a két fájlban és a `tools/build_pages.py` elején (SEO_JSONLD) írd át.
+- `public/sitemap.xml` és `public/robots.txt` a https://bypstudio.hu címre van beállítva. Ha más lesz a domain, ebben a két fájlban és a `tools/build_pages.py` elején (SEO_JSONLD) írd át.
 - A sitemapot a Google Search Console-ban kell beküldeni: Sitemaps → `sitemap.xml`.
 
 ## Árak, szolgáltatások, időtartamok módosítása
 - Minden ár és szolgáltatás a `netlify/lib/config.mjs` fájlban van (Borbély Petránál `categories` → `groups` → `services`).
 - `prices: [rövid, félhosszú, hosszú]` – a `null` azt jelenti, hogy az adott hajhossznál nem elérhető. `dur` = a naptárban lefoglalt idő percben.
 - Módosítás után futtasd: `python3 tools/build_pages.py` (ez frissíti az Árlista oldalt), majd töltsd fel a fájlokat.
+
+## Google Naptár szinkron (Borbély Petra és Nagyné Kiss Csilla)
+1. console.cloud.google.com → új projekt (pl. „BYP Studio”).
+2. APIs & Services → Library → „Google Calendar API” → Enable.
+3. APIs & Services → Credentials → Create credentials → Service account → név: byp-naptar → Done.
+4. A szolgáltatásfiókra kattintva: Keys → Add key → Create new key → JSON (letöltődik egy fájl).
+5. Petra és Csilla is a saját Google Naptárában: Beállítások → saját naptár → „Megosztás adott személyekkel” → a szolgáltatásfiók e-mail-címe (…@….iam.gserviceaccount.com) → „Módosíthatja az eseményeket”.
+6. Netlify → Environment variables:
+   - GOOGLE_SERVICE_ACCOUNT = a letöltött JSON fájl teljes tartalma
+   - GCAL_PETRA = decseipetra01@gmail.com
+   - GCAL_CSILLA = csillagtina130618@gmail.com
+   Utána új deploy.
+Mindkét naptárhoz ugyanaz az egy szolgáltatásfiók (és ugyanaz a JSON) használható.
+
+## Messenger-linkek
+`netlify/lib/config.mjs` → Löki Andrea (m.me/ancsii23) és Német-Kotyuga Viktória (m.me/viktoria.kotyuga) `messenger:` sora.

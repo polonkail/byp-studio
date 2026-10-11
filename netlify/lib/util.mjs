@@ -66,3 +66,13 @@ export function requireAdmin(req) {
 export const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
 export const clean = (v, max) => String(v ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, max);
+
+// ---- heti munkarend (szabadnapok) a kezelőfelületről; felülírja a config.mjs alapértelmezését ----
+const DEFAULT_HOURS = Object.fromEntries(SPECIALISTS.map(s => [s.id, JSON.parse(JSON.stringify(s.hours))]));
+export async function loadSchedule() {
+  let saved = null;
+  try { saved = await store('settings').get('schedule', { type: 'json' }); } catch {}
+  for (const s of SPECIALISTS) s.hours = (saved && saved[s.id]) || JSON.parse(JSON.stringify(DEFAULT_HOURS[s.id]));
+  return saved || {};
+}
+export const defaultHours = id => DEFAULT_HOURS[id];

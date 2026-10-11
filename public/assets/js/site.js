@@ -171,10 +171,30 @@
         el('p', {}, 'Hívj minket bizalommal: telefonon szívesen segítünk kiválasztani az elképzeléseidhez illő kezelést, és közösen egyeztetünk időpontot.'),
         el('p', { class: 'help-phones' }, phones.map(p => el('a', { class: 'tel', href: 'tel:' + p.phone.replace(/\s/g, '') }, (S ? '' : (p.short || p.name) + ': ') + p.phone)))));
   }
+  function messengerBox(S) {
+    const first = S.name.split(' ').pop();
+    const dat = first.replace(/a$/, 'á').replace(/e$/, 'é') + (/[aáoóuú][^aáeéiíoóöőuúüű]*$/i.test(first) ? 'nak' : 'nek');
+    return el('div', { class: 'msg-card' },
+      el('div', { class: 'msg-ico' }, icon('messenger')),
+      el('div', { class: 'msg-body' },
+        el('p', { class: 'eyebrow' }, 'Személyes egyeztetés'),
+        el('h3', {}, `${first} személyesen egyezteti az időpontokat`),
+        el('p', { class: 'muted' }, `Írj ${dat} Messengeren: mondd el, milyen kezelést szeretnél, és mikor lenne jó neked. Hamarosan válaszol, és közösen megtaláljátok a legmegfelelőbb időpontot.`),
+        el('ul', { class: 'msg-svcs' }, S.services.map(v => el('li', {}, v.name))),
+        el('div', { class: 'msg-actions' },
+          el('a', { class: 'btn msg-btn', href: S.messenger, target: '_blank', rel: 'noopener' }, icon('messenger'), `Írok ${dat} Messengeren`),
+          el('a', { class: 'tel', href: 'tel:' + S.phone.replace(/\s/g, '') }, icon('phone'), S.phone))));
+  }
   function renderBooking() {
     const ps = $('#pickSpec'); ps.replaceChildren();
     for (const s of CFG.specialists) ps.append(el('button', { type: 'button', class: 'opt', 'aria-pressed': String(st.spec === s.id), onclick: () => selectSpec(s.id) }, icon(s.icon), el('b', {}, s.short || s.name), el('small', {}, s.role)));
     const S = curSpec();
+    if (S && S.booking === 'messenger') {
+      $('#helpBox')?.replaceChildren(messengerBox(S));
+      $('#blkSvc').hidden = true; $('#blkCal').hidden = true; $('#blkForm').hidden = true;
+      document.querySelectorAll('#stepList li').forEach((li, i) => { li.classList.toggle('done', i === 0); li.classList.toggle('cur', i === 1); li.lastElementChild.textContent = i === 0 ? (S.short || S.name) : i === 1 ? 'Messenger' : ''; });
+      return;
+    }
     $('#helpBox')?.replaceChildren(helpBox(S));
     $('#blkSvc').hidden = !S;
     const pv = $('#pickSvc'); pv.replaceChildren();

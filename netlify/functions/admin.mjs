@@ -1,10 +1,12 @@
-import { json, handle, store, spec, requireAdmin, mutateJSON, monthKey, newId, clean, salonNow, weekday, toMin, toT, overlaps, HttpError, DATE_RE, TIME_RE } from '../lib/util.mjs';
+import { json, handle, store, spec, requireAdmin, mutateJSON, monthKey, newId, clean, salonNow, weekday, toMin, toT, overlaps, HttpError, DATE_RE, TIME_RE, loadSchedule, defaultHours } from '../lib/util.mjs';
 import { resolveItems, createBooking, removeStat } from '../lib/booking.mjs';
+import { gcalPush, gcalRemove, gcalBusy, gcalEnabled } from '../lib/gcal.mjs';
 
 const IMG_TYPES = ['image/jpeg', 'image/webp', 'image/png'];
 const MAX_IMG = 5 * 1024 * 1024;
 
 export default handle(async req => {
+  await loadSchedule();
   requireAdmin(req);
   const url = new URL(req.url);
   const route = url.pathname.replace(/^\/api\/admin\/?/, '');
@@ -73,6 +75,7 @@ export default handle(async req => {
     });
     await store('bookings').delete(`${b.date}/${b.spec}/${b.id}`);
     await removeStat(b.date, b.id);
+    await gcalRemove(b.spec, b.id);
     return json({ ok: true });
   }
 
@@ -101,6 +104,7 @@ export default handle(async req => {
       });
       const rec = { id, type: 'block', spec: s.id, specName: s.name, date: b.date, start: from, end: toT(start + dur), dur, note: clean(b.note, 120), createdAt: new Date().toISOString() };
       await store('bookings').setJSON(`${b.date}/${s.id}/${id}`, rec);
+      await gcalPush(rec);
       created.push(rec);
     }
     return json({ ok: true, created });
@@ -145,6 +149,41 @@ export default handle(async req => {
     const entries = [];
     for (const { key } of blobs) entries.push(...((await st.get(key, { type: 'json' })) || []));
     return json({ today: salonNow().date, entries });
+  }
+
+  // --- heti munkarend / szabadnapok ---
+  if (route === 'schedule' && M === 'GET') {
+    const out = {};
+    for (const id of ['petra', 'csilla', 'andrea', 'viktoria']) out[id] = { hours: spec(id).hours, defaults: defaultHours(id) };
+    return json({ schedule: out });
+  }
+  if (route === 'schedule' && M === 'POST') {
+    const b = await req.json();
+    const s = spec(b.spec);
+    if (!s) throw new HttpError(400, 'bad', 'Válassz szakembert.');
+    const hours = {};
+    for (let d = 0; d <= 6; d++) {
+      const h = b.hours?.[d];
+      if (!h) continue;
+      if (!TIME_RE.test(h[0] || '') || !TIME_RE.test(h[1] || '') || toMin(h[1]) <= toMin(h[0])) throw new HttpError(400, 'bad', 'Minden munkanapnál add meg a kezdést és a befejezést (a befejezés legyen később).');
+      hours[d] = [h[0], h[1]];
+    }
+    await mutateJSON(store('settings'), 'schedule', doc => ({ ...(doc || {}), [s.id]: hours }));
+    s.hours = hours;
+    // figyelmeztetés: jövőbeli foglalások olyan napon, ami most szabadnap lett
+    const today = salonNow().date;
+    const { blobs } = await store('bookings').list();
+    const conflicts = blobs.map(x => x.key).filter(k => k.slice(0, 10) >= today && k.split('/')[1] === s.id && !hours[weekday(k.slice(0, 10))]).map(k => k.slice(0, 10));
+    return json({ ok: true, conflicts: [...new Set(conflicts)].sort() });
+  }
+
+  // --- Google Naptár foglaltság egy napra (a kezelőfelület naptárához) ---
+  if (route === 'gbusy' && M === 'GET') {
+    const date = url.searchParams.get('date');
+    if (!DATE_RE.test(date || '')) throw new HttpError(400, 'bad', 'Hibás dátum.');
+    const out = {};
+    for (const id of ['petra', 'csilla', 'andrea', 'viktoria']) if (gcalEnabled(id)) out[id] = (await gcalBusy(id, date, date))[date] || [];
+    return json({ busy: out });
   }
 
   // --- guestbook moderation ---
