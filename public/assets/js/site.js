@@ -183,7 +183,8 @@
         el('ul', { class: 'msg-svcs' }, S.services.map(v => el('li', {}, v.name))),
         el('div', { class: 'msg-actions' },
           el('a', { class: 'btn msg-btn', href: S.messenger, target: '_blank', rel: 'noopener' }, icon('messenger'), `Írok ${dat} Messengeren`),
-          el('a', { class: 'tel', href: 'tel:' + S.phone.replace(/\s/g, '') }, icon('phone'), S.phone))));
+          el('a', { class: 'tel', href: 'tel:' + S.phone.replace(/\s/g, '') }, icon('phone'), S.phone)),
+        /m\.me\//.test(S.messenger) ? '' : el('p', { class: 'muted msg-hint' }, `A gomb ${first} Facebook-profilját nyitja meg: ott az „Üzenet” gombra koppintva tudsz írni neki.`)));
   }
   function renderBooking() {
     const ps = $('#pickSpec'); ps.replaceChildren();

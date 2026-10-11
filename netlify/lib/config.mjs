@@ -102,7 +102,7 @@ export const SPECIALISTS = [
   },
   {
     id: 'viktoria', name: 'Német-Kotyuga Viktória', short: 'Kotyuga Viktória', role: 'Zselés és műköröm', icon: 'polish', phone: '+36 30 845 4499',
-    booking: 'messenger', messenger: 'https://m.me/viktoria.kotyuga',
+    booking: 'messenger', messenger: 'https://www.facebook.com/viktoria.kotyuga',
     hours: DEFAULT_HOURS,
     services: [
       { id: 'kez', name: 'Kézápolás', dur: 45 },
