@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /feltoltes/
+Disallow: /api/
+
+Sitemap: https://byp-studio.hu/sitemap.xml

@@ -25,6 +25,7 @@ npx netlify-cli deploy --prod
 
 ## Oldalak
 - Főoldal: `/` (rólunk, szolgáltatások, kapcsolat)
+- Árlista: `/arlista/`
 - Galéria: `/galeria/`
 - Vendégkönyv: `/vendegkonyv/`
 - Időpontfoglalás: `/foglalas/` (egy szakember előre kiválasztva: `/foglalas/?szakember=petra`)
@@ -39,3 +40,12 @@ npx netlify-cli deploy --prod
 A GitHub repositoryban **Add file → Upload files**, húzd be újra a kicsomagolt mappa teljes tartalmát, majd **Commit changes**. A Netlify pár perc alatt magától frissíti az oldalt.
 - A foglalásokat 30 nap után a rendszer automatikusan törli.
 - A háttérképek a `tools/gen_bg.py` szkripttel készültek; saját fotóra cserélhetők a `public/assets/img` mappában.
+
+## Google kereső
+- `public/sitemap.xml` és `public/robots.txt` a https://byp-studio.hu címre van beállítva. Ha más lesz a domain, ebben a két fájlban és a `tools/build_pages.py` elején (SEO_JSONLD) írd át.
+- A sitemapot a Google Search Console-ban kell beküldeni: Sitemaps → `sitemap.xml`.
+
+## Árak, szolgáltatások, időtartamok módosítása
+- Minden ár és szolgáltatás a `netlify/lib/config.mjs` fájlban van (Borbély Petránál `categories` → `groups` → `services`).
+- `prices: [rövid, félhosszú, hosszú]` – a `null` azt jelenti, hogy az adott hajhossznál nem elérhető. `dur` = a naptárban lefoglalt idő percben.
+- Módosítás után futtasd: `python3 tools/build_pages.py` (ez frissíti az Árlista oldalt), majd töltsd fel a fájlokat.

@@ -23,7 +23,7 @@ lightbox = cut('<div class="lightbox"', '</figure>\n</div>')
 forms = cut('<!-- Netlify Forms', '<script src="/assets/js/site.js', include_end=False)
 script = re.search(r'<script src="/assets/js/site\.js[^"]*" defer></script>', src).group(0)
 
-NAV = [('rolunk', '/#rolunk', 'Rólunk'), ('szolgaltatasok', '/#szolgaltatasok', 'Szolgáltatások'),
+NAV = [('szolgaltatasok', '/#szolgaltatasok', 'Szolgáltatások'), ('arlista', '/arlista/', 'Árlista'),
        ('galeria', '/galeria/', 'Galéria'), ('vendegkonyv', '/vendegkonyv/', 'Vendégkönyv'),
        ('foglalas', '/foglalas/', 'Időpontfoglalás'), ('visszajelzes', '/visszajelzes/', 'Visszajelzés'),
        ('kapcsolat', '/#kapcsolat', 'Kapcsolat')]
@@ -71,6 +71,7 @@ def write(path, html):
 
 
 # ---------- main page ----------
+SEO_JSONLD = '<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BeautySalon", "name": "BYP Studio", "alternateName": "BYP Stúdió", "slogan": "Szépséged a szenvedélyünk", "description": "Szépségstúdió Hajdúszoboszlón: fodrászat, kézápolás, műköröm, zselés lakkozás, esztétikai pedikűr, szempilla-hosszabbítás és fülbelövés.", "url": "https://byp-studio.hu/", "logo": "https://byp-studio.hu/assets/img/logo-full.png", "image": "https://byp-studio.hu/assets/img/og.jpg", "email": "bypstudio11@gmail.com", "telephone": "+36 70 788 8935", "address": {"@type": "PostalAddress", "streetAddress": "Luther u. 11.", "addressLocality": "Hajdúszoboszló", "postalCode": "4200", "addressCountry": "HU"}, "areaServed": "Hajdúszoboszló", "priceRange": "$$", "sameAs": ["https://www.facebook.com/profile.php?id=61592159116115", "https://www.instagram.com/byp.studio11/"], "potentialAction": {"@type": "ReserveAction", "target": "https://byp-studio.hu/foglalas/"}, "employee": [{"@type": "Person", "name": "Borbély Petra", "jobTitle": "Fodrász", "telephone": "+36 70 788 8935"}, {"@type": "Person", "name": "Nagyné Kiss Csilla Krisztina", "jobTitle": "Kéz- és lábápoló", "telephone": "+36 70 317 5667"}, {"@type": "Person", "name": "Löki Andrea", "jobTitle": "Szempilla-stylist", "telephone": "+36 30 608 2304"}, {"@type": "Person", "name": "Német-Kotyuga Viktória", "jobTitle": "Műkörmös", "telephone": "+36 30 845 4499"}]}</script>\n'
 explore = '''  <section class="sec explore" id="felfedezes">
     <div class="wrap">
       <div class="sec-head rv">
@@ -111,15 +112,15 @@ hero = re.search(r'  <section class="hero on-dark">.*?\n  </section>\n', src, re
 hero = hero.replace('href="#foglalas"', 'href="/foglalas/"')
 main_body = ('<main id="top">\n' + hero + '\n' + section('rolunk') + '\n' + section('szolgaltatasok') + '\n'
              + explore + section('kapcsolat') + '</main>\n\n')
-write('index.html', page_head('BYP Studio · Szépségstúdió Hajdúszoboszló',
+write('index.html', page_head('BYP Studio · Fodrász, körmös, szempilla – Hajdúszoboszló',
                               'BYP Studio, Hajdúszoboszló: fodrászat, kézápolás, műköröm, pedikűr, szempilla-hosszabbítás és fülbelövés egy helyen. Foglalj időpontot online.')
-      + header('') + '\n' + main_body + footer + '\n\n' + forms + script + '\n</body>\n</html>\n')
+      .replace('</head>', SEO_JSONLD + '</head>') + header('') + '\n' + main_body + footer + '\n\n' + forms + script + '\n</body>\n</html>\n')
 
 # ---------- gallery ----------
 gal = section('galeria')
 gal = re.sub(r'\s*<div class="sec-head rv">\s*<p class="eyebrow">Galéria</p>.*?</div>\n', '\n', gal, count=1, flags=re.S)
 gal = gal.replace('class="sec on-dark marble-band" id="galeria"', 'class="sec on-dark marble-band page-first" id="galeria"')
-write('galeria/index.html', page_head('Galéria · BYP Studio', 'A BYP Studio munkái: frizurák, körmök, szempilla és pedikűr.')
+write('galeria/index.html', page_head('Galéria · BYP Studio Hajdúszoboszló', 'A BYP Studio munkái: frizurák, körmök, szempilla és pedikűr.')
       + header('galeria') + '\n<main id="top">\n'
       + page_hero('Galéria', 'Munkáink <em>közelről</em>', 'Válogatás a stúdió négy szakemberének munkáiból.')
       + gal + '</main>\n\n' + footer + '\n\n' + lightbox + '\n\n' + script + '\n</body>\n</html>\n')
@@ -127,7 +128,7 @@ write('galeria/index.html', page_head('Galéria · BYP Studio', 'A BYP Studio mu
 # ---------- guestbook ----------
 gb = section('vendegkonyv')
 gb = re.sub(r'<div class="sec-head" style="margin-bottom:0">.*?</div>', '<p class="lead">Köszönjük minden vendégünknek a kedves szavakat. Olvasd el, mit írtak rólunk, vagy írj te is.</p>', gb, count=1, flags=re.S)
-write('vendegkonyv/index.html', page_head('Vendégkönyv · BYP Studio', 'Vendégeink véleménye a BYP Studióról. Írj te is a vendégkönyvünkbe.')
+write('vendegkonyv/index.html', page_head('Vendégkönyv · BYP Studio Hajdúszoboszló', 'Vendégeink véleménye a BYP Studióról. Írj te is a vendégkönyvünkbe.')
       + header('vendegkonyv') + '\n<main id="top">\n'
       + page_hero('Vendégkönyv', 'Akik már <em>nálunk</em> jártak', 'Vendégeink szavai, csillagai és emlékei a BYP Studióból.')
       + gb + '</main>\n\n' + footer + '\n\n' + script + '\n</body>\n</html>\n')
@@ -135,7 +136,7 @@ write('vendegkonyv/index.html', page_head('Vendégkönyv · BYP Studio', 'Vendé
 # ---------- booking ----------
 bk = section('foglalas')
 bk = re.sub(r'\s*<div class="sec-head center rv">.*?</div>\n', '\n', bk, count=1, flags=re.S)
-write('foglalas/index.html', page_head('Időpontfoglalás · BYP Studio', 'Foglalj időpontot online a BYP Studióba: válaszd ki a szakembert, a szolgáltatást és a szabad időpontot.')
+write('foglalas/index.html', page_head('Időpontfoglalás · BYP Studio Hajdúszoboszló', 'Foglalj időpontot online a BYP Studióba: válaszd ki a szakembert, a szolgáltatást és a szabad időpontot.')
       + header('foglalas') + '\n<main id="top">\n'
       + page_hero('Online időpontfoglalás', 'Válaszd ki a <em>te</em> időpontodat', 'A naptárban zölddel látod a szabad időpontokat. Pár kattintás, és már várunk is.')
       + bk + '</main>\n\n' + footer + '\n\n' + script + '\n</body>\n</html>\n')
@@ -143,7 +144,10 @@ write('foglalas/index.html', page_head('Időpontfoglalás · BYP Studio', 'Fogla
 # ---------- feedback ----------
 fb = section('visszajelzes')
 fb = re.sub(r'\s*<p class="eyebrow">Visszajelzés</p>\s*<h2>.*?</h2>', '', fb, count=1, flags=re.S)
-write('visszajelzes/index.html', page_head('Visszajelzés · BYP Studio', 'Írd meg nekünk a véleményed, ötleted vagy kérdésed. Az üzenetet csak a BYP Studio munkatársai olvassák.')
+write('visszajelzes/index.html', page_head('Visszajelzés · BYP Studio Hajdúszoboszló', 'Írd meg nekünk a véleményed, ötleted vagy kérdésed. Az üzenetet csak a BYP Studio munkatársai olvassák.')
       + header('visszajelzes') + '\n<main id="top">\n'
       + page_hero('Visszajelzés', 'Mondd el <em>őszintén</em>', 'Minden üzenetet elolvasunk, és sokat segít nekünk, hogy még jobbak legyünk.')
       + fb + '</main>\n\n' + footer + '\n\n' + script + '\n</body>\n</html>\n')
+
+# ---------- price list ----------
+exec(open(os.path.join(os.path.dirname(__file__), 'build_pricelist.py'), encoding='utf-8').read())

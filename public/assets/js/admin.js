@@ -143,7 +143,7 @@
           el('span', { class: 't' }, `${b.start}–${b.end}`),
           b.type === 'block'
             ? el('span', { class: 'who' }, el('b', {}, 'Lezárva' + (b.note ? ': ' + b.note : '')), el('small', {}, specName(b.spec)))
-            : el('span', { class: 'who' }, el('b', {}, `${b.name} · ${b.phone}`), el('small', {}, `${b.svcName} · ${specName(b.spec)}${b.email ? ' · ' + b.email : ''}`), b.note ? el('small', {}, 'Megjegyzés: ' + b.note) : null),
+            : el('span', { class: 'who' }, el('b', {}, `${b.name} · ${b.phone}`), el('small', {}, `${b.svcName}${b.price ? ' · ' + b.price : ''} · ${specName(b.spec)}${b.email ? ' · ' + b.email : ''}`), b.note ? el('small', {}, 'Megjegyzés: ' + b.note) : null),
           c);
       })));
     }
