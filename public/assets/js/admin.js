@@ -11,7 +11,7 @@
     return e;
   };
   const KEY = 'byp-admin-pw';
-  const TABS = ['galeria', 'foglalasok', 'zaras', 'vendegkonyv', 'visszajelzes'];
+  const TABS = ['naptar', 'statisztika', 'galeria', 'foglalasok', 'zaras', 'vendegkonyv', 'visszajelzes'];
   let PW = ''; try { PW = sessionStorage.getItem(KEY) || ''; } catch {}
   let CFG = null, images = [], bookings = [], bkFilter = 'all';
 
@@ -37,7 +37,7 @@
   function logout(msg) {
     PW = ''; try { sessionStorage.removeItem(KEY); } catch {}
     $('#loginForm').hidden = false; $('#tabs').hidden = true;
-    TABS.forEach(t => $('#tab-' + t).hidden = true);
+    TABS.forEach(t => $('#tab-' + t).hidden = true); $('#visitStrip').hidden = true;
     $('#loginMsg').textContent = msg || '';
   }
   $('#logout').addEventListener('click', () => logout(''));
@@ -52,13 +52,16 @@
     const opts = CFG.specialists.map(s => el('option', { value: s.id }, s.name));
     $('#upSpec').replaceChildren(el('option', { value: '' }, 'Stúdió (általános)'), ...opts.map(o => o.cloneNode(true)));
     $('#blSpec').replaceChildren(el('option', { value: 'all' }, 'Mindenki (az egész stúdió)'), ...opts);
-    showTab(location.hash.slice(1) || 'galeria');
+    showTab(location.hash.slice(1) || 'naptar');
+    loadVisits();
   }
   function showTab(t) {
-    if (!TABS.includes(t)) t = 'galeria';
+    if (!TABS.includes(t)) t = 'naptar';
     document.querySelectorAll('.tab[data-tab]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
     TABS.forEach(x => $('#tab-' + x).hidden = x !== t);
     history.replaceState(null, '', '#' + t);
+    if (t === 'naptar') loadCal();
+    if (t === 'statisztika') { renderVisits(); loadStats(); loadVisits(); }
     if (t === 'galeria') loadImages();
     if (t === 'foglalasok') loadBookings();
     if (t === 'vendegkonyv') loadGb();
@@ -66,6 +69,7 @@
     loadCounts();
   }
   document.querySelectorAll('.tab[data-tab]').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+  addEventListener('hashchange', () => { if (PW && !$('#tabs').hidden) showTab(location.hash.slice(1)); });
 
   /* ---------- gallery ---------- */
   async function loadImages() {
@@ -224,6 +228,232 @@
         el('div', { class: 'item-actions' }, el('button', { class: 'mini', type: 'button', onclick: () => act(x.read ? 'unread' : 'read') }, x.read ? 'Olvasatlannak jelöl' : 'Olvasottnak jelöl'), del)));
     }
   }
+
+  /* ---------- közös segédek ---------- */
+  const pad2 = n => String(n).padStart(2, '0');
+  const ymdL = d => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  const parseD = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+  const addD = (s, n) => { const d = parseD(s); d.setDate(d.getDate() + n); return ymdL(d); };
+  const toMinA = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+  const toTA = m => pad2(Math.floor(m / 60)) + ':' + pad2(m % 60);
+  const ftA = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' Ft';
+  const nf = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  const durA = m => m >= 60 ? (m % 60 ? `${Math.floor(m / 60)} ó ${m % 60} p` : `${m / 60} óra`) : `${m} perc`;
+  const shortName = id => { const s = CFG.specialists.find(x => x.id === id); return s ? (s.short || s.name) : id; };
+  const tip = el('div', { class: 'tip', hidden: true }); document.body.append(tip);
+  const showTip = (e, text) => { tip.textContent = text; tip.hidden = false; tip.style.left = Math.min(e.clientX + 12, innerWidth - tip.offsetWidth - 8) + 'px'; tip.style.top = (e.clientY - 34) + 'px'; };
+
+  /* ---------- modal ---------- */
+  const modal = $('#modal');
+  function openModal(title, ...content) { $('#modalTitle').textContent = title; $('#modalBody').replaceChildren(...content); modal.hidden = false; document.body.style.overflow = 'hidden'; }
+  function closeModal() { modal.hidden = true; document.body.style.overflow = ''; }
+  $('#modalClose').addEventListener('click', closeModal);
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+  addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
+
+  /* ---------- látogatók (fejléc-sáv + statisztika) ---------- */
+  let visits = null;
+  const weekStart = today => { const d = parseD(today); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return ymdL(d); };
+  function periodSums(days, today) {
+    const ws = weekStart(today), mo = today.slice(0, 7), yr = today.slice(0, 4);
+    const sum = f => days.filter(f).reduce((a, d) => ({ uv: a.uv + d.uv, pv: a.pv + d.pv }), { uv: 0, pv: 0 });
+    return { ma: sum(d => d.date === today), het: sum(d => d.date >= ws && d.date <= today), honap: sum(d => d.date.startsWith(mo)), ev: sum(d => d.date.startsWith(yr)), ossz: sum(() => true) };
+  }
+  async function loadVisits() {
+    try { visits = await api('/api/admin/visits'); } catch { return; }
+    const p = periodSums(visits.days, visits.today);
+    const vs = $('#visitStrip'); vs.hidden = false;
+    vs.replaceChildren('Látogatók: ', ...[['ma', p.ma], ['ezen a héten', p.het], ['ebben a hónapban', p.honap], ['összesen', p.ossz]].flatMap(([l, v], i) => [i ? ' · ' : '', `${l}: `, el('b', {}, nf(v.uv))]));
+    if (!$('#tab-statisztika').hidden) renderVisits();
+  }
+  function renderVisits() {
+    if (!visits) return;
+    const p = periodSums(visits.days, visits.today);
+    $('#visitKpis').replaceChildren(...[['Ma', p.ma], ['Ezen a héten', p.het], ['Ebben a hónapban', p.honap], ['Idén', p.ev], ['Összesen', p.ossz]].map(([l, v]) =>
+      el('div', { class: 'kpi' }, el('small', {}, l), el('b', {}, nf(v.uv)), el('span', {}, `látogató · ${nf(v.pv)} oldalmegtekintés`))));
+    const map = Object.fromEntries(visits.days.map(d => [d.date, d]));
+    const series = Array.from({ length: 30 }, (_, i) => { const date = addD(visits.today, i - 29); return { date, uv: map[date]?.uv || 0, pv: map[date]?.pv || 0 }; });
+    const max = Math.max(1, ...series.map(s => s.uv));
+    const chart = $('#visitChart');
+    const bars = el('div', { class: 'spark', role: 'img', 'aria-label': 'Napi látogatók az elmúlt 30 napban' }, series.map(s => {
+      const b = el('div', { class: 'bar', style: `height:${(s.uv / max) * 100}%`, tabindex: '0', 'aria-label': `${s.date}: ${s.uv} látogató` });
+      const t = `${parseD(s.date).toLocaleDateString('hu-HU', { month: 'short', day: 'numeric' })}: ${s.uv} látogató, ${s.pv} oldalmegtekintés`;
+      b.addEventListener('pointermove', e => showTip(e, t)); b.addEventListener('pointerleave', () => tip.hidden = true);
+      return b;
+    }));
+    const fmtS = d => parseD(d).toLocaleDateString('hu-HU', { month: 'short', day: 'numeric' });
+    chart.replaceChildren(bars, el('div', { class: 'spark-axis' }, el('span', {}, fmtS(series[0].date)), el('span', {}, `csúcs: ${max} látogató/nap`), el('span', {}, 'ma')));
+  }
+
+  /* ---------- szolgáltatás-statisztika ---------- */
+  let statData = null, stPeriod = 'honap', stSpec = 'all';
+  async function loadStats() {
+    $('#stTable').replaceChildren(el('tbody', {}, el('tr', {}, el('td', {}, 'Betöltés…'))));
+    try { statData = await api('/api/admin/stats'); renderStats(); } catch (e) { if (e.message !== 'unauthorized') $('#stTable').replaceChildren(el('tbody', {}, el('tr', {}, el('td', { class: 'status err' }, e.message)))); }
+  }
+  function renderStats() {
+    if (!statData) return;
+    const today = statData.today, ws = weekStart(today);
+    const P = { het: ['Ez a hét', d => d >= ws], honap: ['Ez a hónap', d => d.startsWith(today.slice(0, 7))], ev: ['Ez az év', d => d.startsWith(today.slice(0, 4))], ossz: ['Összesen', () => true] };
+    $('#stPeriod').replaceChildren(...Object.entries(P).map(([k, [l]]) => el('button', { class: 'fchip', type: 'button', 'aria-pressed': String(stPeriod === k), onclick: () => { stPeriod = k; renderStats(); } }, l)));
+    $('#stSpec').replaceChildren(...[['all', 'Mindenki'], ...CFG.specialists.map(s => [s.id, s.short || s.name])].map(([k, l]) => el('button', { class: 'fchip', type: 'button', 'aria-pressed': String(stSpec === k), onclick: () => { stSpec = k; renderStats(); } }, l)));
+    const ents = statData.entries.filter(e => e.d <= today && P[stPeriod][1](e.d) && (stSpec === 'all' || e.spec === stSpec));
+    const rows = {};
+    let rev = 0, nItems = 0;
+    for (const e of ents) for (const i of e.items) {
+      const key = e.spec + '|' + i.svc + (i.svc === 'egyeb' ? '|' + i.name : '');
+      const r = rows[key] ||= { name: i.name, cat: i.cat, spec: e.spec, n: 0, rev: 0 };
+      r.n++; r.rev += i.p || 0; rev += i.p || 0; nItems++;
+    }
+    const online = ents.filter(e => e.src === 'online').length;
+    $('#stKpis').replaceChildren(...[
+      ['Alkalom', nf(ents.length), 'foglalás'],
+      ['Szolgáltatás', nf(nItems), 'tétel összesen'],
+      ['Online', nf(online), `${ents.length ? Math.round(online / ents.length * 100) : 0}%`],
+      ['Telefonos', nf(ents.length - online), `${ents.length ? Math.round((ents.length - online) / ents.length * 100) : 0}%`],
+      ['Becsült bevétel', ftA(rev), 'árlista szerint'],
+    ].map(([l, v, s]) => el('div', { class: 'kpi' }, el('small', {}, l), el('b', {}, v), el('span', {}, s))));
+    const list = Object.values(rows).sort((a, b) => b.n - a.n || b.rev - a.rev);
+    const max = Math.max(1, ...list.map(r => r.n));
+    const t = $('#stTable');
+    if (!list.length) { t.replaceChildren(el('tbody', {}, el('tr', {}, el('td', { class: 'muted' }, 'Ebben az időszakban még nincs megtörtént foglalás.')))); return; }
+    t.replaceChildren(
+      el('thead', {}, el('tr', {}, el('th', {}, 'Szolgáltatás'), stSpec === 'all' ? el('th', {}, 'Szakember') : null, el('th', {}, 'Darab'), el('th', { class: 'barcell' }, ''), el('th', {}, 'Becsült bevétel'))),
+      el('tbody', {}, list.map(r => el('tr', {},
+        el('td', {}, r.name, r.cat ? el('div', { class: 'cat' }, r.cat) : null),
+        stSpec === 'all' ? el('td', {}, shortName(r.spec)) : null,
+        el('td', {}, nf(r.n)),
+        el('td', { class: 'barcell' }, el('div', { class: 'hb', style: `width:${r.n / max * 100}%` })),
+        el('td', {}, r.rev ? ftA(r.rev) : '–')))),
+      el('tfoot', {}, el('tr', {}, el('td', {}, 'Összesen'), stSpec === 'all' ? el('td', {}, '') : null, el('td', {}, nf(nItems)), el('td', {}, ''), el('td', {}, ftA(rev)))));
+  }
+
+  /* ---------- naptár ---------- */
+  const DAY_S = 7 * 60, DAY_E = 20 * 60, SLOT = 30, RH = 44;
+  let calDate = ymdL(new Date()), calSpec = 'all', calBookings = [];
+  const yPos = m => (m - DAY_S) / SLOT * RH;
+  async function loadCal() {
+    $('#calDate').value = calDate;
+    const d = parseD(calDate), isToday = calDate === ymdL(new Date());
+    $('#calTitle').textContent = (isToday ? 'Ma, ' : '') + d.toLocaleDateString('hu-HU', { month: 'long', day: 'numeric', weekday: 'long' });
+    $('#calSpecs').replaceChildren(...[['all', 'Mindenki'], ...CFG.specialists.map(s => [s.id, s.short || s.name])].map(([k, l]) => el('button', { class: 'fchip', type: 'button', 'aria-pressed': String(calSpec === k), onclick: () => { calSpec = k; renderCal(); } }, l)));
+    renderCal();
+    try { calBookings = (await api(`/api/admin/bookings?from=${calDate}&to=${calDate}`)).bookings; renderCal(); }
+    catch (e) { if (e.message !== 'unauthorized') alertMsg(e.message); }
+  }
+  function renderCal() {
+    document.querySelectorAll('#calSpecs .fchip').forEach((b, i) => b.setAttribute('aria-pressed', String((i === 0 ? 'all' : CFG.specialists[i - 1].id) === calSpec)));
+    const specs = calSpec === 'all' ? CFG.specialists : CFG.specialists.filter(s => s.id === calSpec);
+    const g = $('#calGrid'); g.style.setProperty('--cols', specs.length); g.style.setProperty('--rh', RH + 'px');
+    const H = yPos(DAY_E);
+    const kids = [el('div', { class: 'cal-colhead', style: 'border-left:0' }, '')];
+    for (const s of specs) kids.push(el('div', { class: 'cal-colhead' }, s.short || s.name));
+    const times = el('div', { class: 'cal-times', style: `height:${H}px` });
+    for (let m = DAY_S + 60; m < DAY_E; m += 60) times.append(el('span', { style: `top:${yPos(m)}px` }, toTA(m)));
+    kids.push(times);
+    const wd = parseD(calDate).getDay();
+    const nowM = new Date().getHours() * 60 + new Date().getMinutes();
+    for (const s of specs) {
+      const col = el('div', { class: 'cal-col', style: `height:${H}px`, 'data-spec': s.id });
+      const hrs = s.hours[wd];
+      if (!hrs) col.append(el('div', { class: 'cal-off', style: `top:0;height:${H}px` }));
+      else {
+        col.append(el('div', { class: 'cal-off', style: `top:0;height:${Math.max(0, yPos(toMinA(hrs[0])))}px` }));
+        col.append(el('div', { class: 'cal-off', style: `top:${yPos(toMinA(hrs[1]))}px;height:${Math.max(0, H - yPos(toMinA(hrs[1])))}px` }));
+      }
+      if (calDate === ymdL(new Date()) && nowM > DAY_S && nowM < DAY_E) col.append(el('div', { class: 'cal-now', style: `top:${yPos(nowM)}px` }));
+      for (const b of calBookings.filter(x => x.spec === s.id)) {
+        const kind = b.type === 'block' ? 'block' : (b.source === 'telefon' ? 'telefon' : 'online');
+        const top = yPos(Math.max(DAY_S, toMinA(b.start))), h = Math.max(22, yPos(Math.min(DAY_E, toMinA(b.end))) - top - 2);
+        col.append(el('button', { type: 'button', class: 'cal-ev ' + kind, style: `top:${top}px;height:${h}px`, onclick: e => { e.stopPropagation(); showBooking(b); } },
+          el('b', {}, `${b.start}–${b.end} ${b.type === 'block' ? 'Lezárva' : b.name}`), el('small', {}, b.type === 'block' ? (b.note || '') : b.svcName)));
+      }
+      col.addEventListener('click', e => {
+        const r = col.getBoundingClientRect();
+        const m = DAY_S + Math.floor((e.clientY - r.top) / RH) * SLOT;
+        newBooking({ spec: s.id, date: calDate, start: toTA(Math.min(DAY_E - SLOT, Math.max(DAY_S, m))) });
+      });
+      kids.push(col);
+    }
+    g.replaceChildren(...kids);
+  }
+  function showBooking(b) {
+    const src = b.type === 'block' ? 'Lezárt időszak' : b.source === 'telefon' ? 'Telefonos foglalás' : 'Online foglalás';
+    const del = el('button', { class: 'mini danger', type: 'button' }, b.type === 'block' ? 'Feloldás' : 'Lemondás');
+    armed(del, del.textContent, async () => { await post('/api/admin/cancel', { date: b.date, spec: b.spec, id: b.id }); closeModal(); loadCal(); });
+    const rows = [['Időpont', `${fmtDay(b.date)}, ${b.start}–${b.end}`], ['Szakember', specName(b.spec)], ['Típus', src]];
+    if (b.type !== 'block') {
+      rows.push(['Vendég', b.name]);
+      if (b.phone) rows.push(['Telefon', el('a', { href: 'tel:' + b.phone.replace(/\s/g, ''), class: 'tel' }, b.phone)]);
+      if (b.email) rows.push(['E-mail', b.email]);
+      rows.push(['Szolgáltatás', b.svcName]);
+      if (b.price) rows.push(['Ár', b.price]);
+    }
+    if (b.note) rows.push(['Megjegyzés', b.note]);
+    openModal(b.type === 'block' ? 'Lezárt időszak' : b.name,
+      el('dl', { class: 'm-info' }, rows.flatMap(([k, v]) => [el('dt', {}, k), el('dd', {}, v)])),
+      el('div', { class: 'item-actions' }, del, el('button', { class: 'mini', type: 'button', onclick: closeModal }, 'Bezárás')));
+  }
+  function newBooking(pre) {
+    const state = { spec: pre.spec || CFG.specialists[0].id, items: {}, durTouched: false, dur: 30, cat: null };
+    const specSel = el('select', { id: 'mSpec' }, CFG.specialists.map(s => el('option', { value: s.id, selected: s.id === state.spec }, s.name)));
+    const dateIn = el('input', { type: 'date', id: 'mDate', value: pre.date, required: true });
+    const timeIn = el('input', { type: 'time', id: 'mTime', value: pre.start, step: '900', required: true });
+    const svcBox = el('div', {}), durB = el('b', {}), extra = el('input', { id: 'mExtra', maxlength: '120', placeholder: 'pl. konzultáció, egyedi kérés' });
+    const nameIn = el('input', { id: 'mName', maxlength: '80', autocomplete: 'off', required: true }), phoneIn = el('input', { id: 'mPhone', type: 'tel', maxlength: '30', autocomplete: 'off' });
+    const noteIn = el('input', { id: 'mNote', maxlength: '500' });
+    const msg = el('p', { class: 'status', role: 'status' });
+    const S = () => CFG.specialists.find(s => s.id === state.spec);
+    const autoDur = () => Object.keys(state.items).reduce((a, id) => a + (S().services.find(v => v.id === id)?.dur || 0), 0) || 30;
+    const paintDur = () => { if (!state.durTouched) state.dur = autoDur(); durB.textContent = durA(state.dur) + ` (${timeIn.value || '--:--'}–${timeIn.value ? toTA(toMinA(timeIn.value) + state.dur) : '--:--'})`; };
+    const renderSvcs = () => {
+      const sp = S(); const box = el('div', { class: 'm-svcs' });
+      const groups = sp.categories ? sp.categories.flatMap(c => c.groups.map(g => [c.groups.length > 1 ? `${c.name} – ${g.name}` : c.name, g.services])) : [[sp.role, sp.services]];
+      for (const [gn, list] of groups) {
+        box.append(el('p', { class: 'm-g' }, gn));
+        for (const v of list) {
+          const chk = el('input', { type: 'checkbox', checked: v.id in state.items });
+          const lenSel = v.prices ? el('select', { 'aria-label': 'Hajhossz' }, el('option', { value: '' }, 'Hajhossz (nem kötelező)'), CFG.lengths.map((L, i) => v.prices[i] == null ? null : el('option', { value: L.id, selected: state.items[v.id] === L.id }, `${L.name} · ${ftA(v.prices[i])}`))) : null;
+          if (lenSel) { lenSel.hidden = !(v.id in state.items); lenSel.addEventListener('change', () => { state.items[v.id] = lenSel.value || null; }); }
+          chk.addEventListener('change', () => { if (chk.checked) state.items[v.id] = null; else delete state.items[v.id]; if (lenSel) lenSel.hidden = !chk.checked; paintDur(); });
+          box.append(el('label', { class: 'm-svc' }, chk, el('span', {}, v.name), el('small', {}, durA(v.dur)), lenSel));
+        }
+      }
+      svcBox.replaceChildren(box);
+    };
+    specSel.addEventListener('change', () => { state.spec = specSel.value; state.items = {}; renderSvcs(); paintDur(); });
+    timeIn.addEventListener('input', paintDur);
+    const step = d => { state.durTouched = true; state.dur = Math.max(15, Math.min(720, state.dur + d)); paintDur(); };
+    const save = async force => {
+      msg.className = 'status err';
+      if (nameIn.value.trim().length < 2) { msg.textContent = 'Add meg a vendég nevét.'; nameIn.focus(); return; }
+      if (!Object.keys(state.items).length && !extra.value.trim()) { msg.textContent = 'Jelölj be legalább egy szolgáltatást, vagy írd be, mire jön a vendég.'; return; }
+      msg.className = 'status'; msg.textContent = 'Mentés…';
+      try {
+        await post('/api/admin/manual-book', { spec: state.spec, date: dateIn.value, start: timeIn.value, dur: state.dur, force,
+          items: Object.entries(state.items).map(([svc, length]) => ({ svc, length })), extra: extra.value, name: nameIn.value, phone: phoneIn.value, note: noteIn.value });
+        closeModal(); calDate = dateIn.value; loadCal();
+      } catch (e) {
+        msg.className = 'status err'; msg.textContent = e.message;
+        if (/foglalta|ütköz/i.test(e.message)) msg.append(' ', el('button', { class: 'mini', type: 'button', onclick: () => save(true) }, 'Mentés mégis (ütközéssel)'));
+      }
+    };
+    renderSvcs(); paintDur();
+    openModal('Új foglalás (telefonos)',
+      el('div', { class: 'row2' }, el('label', { class: 'field' }, el('span', {}, 'Szakember'), specSel), el('label', { class: 'field' }, el('span', {}, 'Vendég neve'), nameIn)),
+      el('div', { class: 'row2' }, el('label', { class: 'field' }, el('span', {}, 'Nap'), dateIn), el('label', { class: 'field' }, el('span', {}, 'Kezdés'), timeIn)),
+      el('div', { class: 'field' }, el('span', {}, 'Szolgáltatások'), svcBox),
+      el('label', { class: 'field' }, el('span', {}, 'Egyéb (ha nincs a listában)'), extra),
+      el('div', { class: 'field' }, el('span', {}, 'Időtartam'), el('div', { class: 'dur-ctl' }, el('button', { class: 'mini nav-btn', type: 'button', onclick: () => step(-15), 'aria-label': '15 perccel rövidebb' }, '−'), durB, el('button', { class: 'mini nav-btn', type: 'button', onclick: () => step(15), 'aria-label': '15 perccel hosszabb' }, '+'))),
+      el('div', { class: 'row2' }, el('label', { class: 'field' }, el('span', {}, 'Telefonszám (nem kötelező)'), phoneIn), el('label', { class: 'field' }, el('span', {}, 'Megjegyzés'), noteIn)),
+      el('div', { class: 'item-actions' }, el('button', { class: 'btn', type: 'button', onclick: () => save(false) }, 'Foglalás mentése'), msg));
+    setTimeout(() => nameIn.focus(), 50);
+  }
+  $('#calPrevDay').addEventListener('click', () => { calDate = addD(calDate, -1); loadCal(); });
+  $('#calNextDay').addEventListener('click', () => { calDate = addD(calDate, 1); loadCal(); });
+  $('#calToday').addEventListener('click', () => { calDate = ymdL(new Date()); loadCal(); });
+  $('#calDate').addEventListener('change', e => { if (e.target.value) { calDate = e.target.value; loadCal(); } });
+  $('#calNew').addEventListener('click', () => newBooking({ spec: calSpec === 'all' ? CFG.specialists[0].id : calSpec, date: calDate, start: '10:00' }));
 
   if (PW) api('/api/admin/login', { method: 'POST' }).then(enter).catch(() => {});
 })();

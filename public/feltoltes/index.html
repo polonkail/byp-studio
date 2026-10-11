@@ -9,7 +9,7 @@
 <link rel="icon" href="/assets/img/favicon-512.png" type="image/png" sizes="512x512">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <link rel="preload" href="/assets/fonts/cormorant-garamond-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/css/site.css?v=20261011a">
+<link rel="stylesheet" href="/assets/css/site.css?v=20261012a">
 <style>
 body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fixed}
 .adm-head{background:var(--noir);color:#f4ede6;padding-top:env(safe-area-inset-top,0px)}
@@ -64,6 +64,74 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
 .reply{display:grid;gap:8px}
 .reply textarea{font:inherit;font-size:.95rem;border:1px solid rgba(34,28,30,.18);padding:10px;min-height:70px;background:#fff;resize:vertical}
 .stars-sm{color:var(--gold);letter-spacing:2px}
+.visit-strip{display:flex;flex-wrap:wrap;gap:6px 22px;align-items:center;background:var(--noir);color:#d9cfc6;padding:12px 18px;margin:0 0 20px;font-size:.88rem}
+.visit-strip b{color:var(--gold-lt);font-weight:500;font-variant-numeric:lining-nums}
+.tabs{overflow-x:auto;scrollbar-width:none}
+@media (max-width:760px){ .tabs{flex-wrap:nowrap;width:100%} .tab{padding:14px 10px;white-space:nowrap} }
+.cal-card{gap:16px}
+.cal-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:14px}
+.cal-ctrl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.cal-ctrl input{font:inherit;border:1px solid rgba(34,28,30,.18);padding:7px 10px;background:#fff}
+.nav-btn{width:40px;height:40px;display:grid;place-items:center;padding:0}
+.cal-legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.78rem;color:var(--stone)}
+.lg{display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:-1px}
+.lg.online{background:#efe2cf;border-left:3px solid var(--gold)}
+.lg.telefon{background:#dfe9e3;border-left:3px solid var(--free)}
+.lg.block{background:repeating-linear-gradient(135deg,#e6e0da 0 4px,#f4f0eb 4px 8px)}
+.lg.off{background:#ece8e4}
+.cal-scroll{overflow-x:auto;border:1px solid rgba(34,28,30,.12);background:#fff}
+.cal-grid{display:grid;grid-template-columns:56px repeat(var(--cols,1),minmax(150px,1fr));min-width:fit-content;position:relative}
+.cal-colhead{position:sticky;top:0;z-index:3;background:var(--noir);color:#f4ede6;padding:10px 8px;font-size:.78rem;letter-spacing:.08em;text-align:center;border-left:1px solid rgba(255,255,255,.08)}
+.cal-times{position:relative}
+.cal-times span{position:absolute;right:8px;transform:translateY(-50%);font-size:.72rem;color:var(--stone);font-variant-numeric:lining-nums tabular-nums}
+.cal-col{position:relative;border-left:1px solid rgba(34,28,30,.1);cursor:copy;background-image:linear-gradient(rgba(34,28,30,.07) 1px,transparent 1px);background-size:100% var(--rh)}
+.cal-off{position:absolute;left:0;right:0;background:#ece8e4;pointer-events:none}
+.cal-ev{position:absolute;left:4px;right:4px;border:0;text-align:left;padding:5px 8px;font-size:.78rem;line-height:1.25;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;gap:1px;z-index:2}
+.cal-ev b{font-weight:500;font-size:.82rem}
+.cal-ev small{color:var(--stone);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-ev.online{background:#efe2cf;border-left:3px solid var(--gold)}
+.cal-ev.telefon{background:#dfe9e3;border-left:3px solid var(--free)}
+.cal-ev.block{background:repeating-linear-gradient(135deg,#e6e0da 0 6px,#f4f0eb 6px 12px);border-left:3px solid var(--stone-lt)}
+.cal-now{position:absolute;left:0;right:0;height:2px;background:var(--danger);z-index:2;pointer-events:none}
+.modal{position:fixed;inset:0;z-index:90;background:rgba(14,11,12,.55);display:grid;place-items:end center;padding:0}
+.modal-box{background:var(--paper);width:min(640px,100%);max-height:92vh;overflow:auto;padding:22px 22px calc(22px + env(safe-area-inset-bottom,0px));display:grid;gap:16px;box-shadow:0 -20px 60px rgba(0,0,0,.25)}
+@media (min-width:700px){ .modal{place-items:center;padding:20px} }
+.modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.modal-head h2{font-size:1.8rem}
+.m-svcs{display:grid;gap:6px;max-height:300px;overflow:auto;border:1px solid rgba(34,28,30,.1);padding:8px;background:#fff}
+.m-svc{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:6px 4px;border-bottom:1px solid rgba(34,28,30,.06);font-size:.92rem}
+.m-svc input{width:18px;height:18px;accent-color:var(--gold)}
+.m-svc small{color:var(--stone);white-space:nowrap}
+.field .m-svc span{font-size:.92rem;letter-spacing:0;text-transform:none;color:var(--ink);font-weight:400}
+.field .m-g{font-size:.68rem}
+.m-svc select{grid-column:2/-1;font:inherit;font-size:.85rem;padding:4px;border:1px solid rgba(34,28,30,.2);background:var(--pearl)}
+.m-g{font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin:8px 4px 2px}
+.dur-ctl{display:flex;align-items:center;gap:10px}
+.dur-ctl b{font-family:var(--f-display);font-size:1.4rem;min-width:7em;text-align:center}
+.m-info{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:.95rem}
+.m-info dt{color:var(--stone)}
+.m-info dd{margin:0;overflow-wrap:anywhere}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1px;background:rgba(34,28,30,.1);border:1px solid rgba(34,28,30,.1)}
+.kpi{background:#fff;padding:16px 18px;display:grid;gap:2px}
+.kpi small{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--stone)}
+.kpi b{font-family:var(--f-display);font-size:2.2rem;font-weight:400;line-height:1.1;font-variant-numeric:lining-nums}
+.kpi span{font-size:.8rem;color:var(--stone)}
+@media (max-width:860px){ .kpis{grid-template-columns:repeat(2,minmax(0,1fr))} }
+.spark{display:grid;grid-template-columns:repeat(30,minmax(0,1fr));gap:2px;align-items:end;height:120px;border-bottom:1px solid rgba(34,28,30,.25);position:relative}
+.spark .bar{background:var(--gold);border-radius:4px 4px 0 0;min-height:2px;position:relative}
+.spark .bar:hover{background:var(--ink)}
+.spark-axis{display:flex;justify-content:space-between;font-size:.72rem;color:var(--stone);margin-top:6px;font-variant-numeric:lining-nums}
+.tip{position:fixed;z-index:100;background:var(--noir);color:#fff;font-size:.8rem;padding:6px 10px;pointer-events:none;white-space:nowrap}
+.table-scroll{overflow-x:auto}
+.stable{width:100%;border-collapse:collapse;font-variant-numeric:lining-nums tabular-nums;font-size:.92rem}
+.stable th,.stable td{padding:10px 8px;border-bottom:1px solid rgba(34,28,30,.08);text-align:right;white-space:nowrap}
+.stable th:first-child,.stable td:first-child{text-align:left;white-space:normal}
+.stable thead th{font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--stone);font-weight:500;border-bottom:1px solid rgba(34,28,30,.3)}
+.stable .barcell{width:30%;min-width:120px}
+.stable .hb{height:10px;background:var(--gold);border-radius:0 4px 4px 0;min-width:2px}
+.stable tfoot td{font-weight:500;border-top:1px solid rgba(34,28,30,.3)}
+.stable .cat{font-size:.7rem;color:var(--stone)}
+.small{font-size:.85rem}
 </style>
 </head>
 <body>
@@ -118,7 +186,9 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
   <div class="wrap">
     <a class="logo" href="/" aria-label="BYP Studio, főoldal"><img class="logo-img" src="/assets/img/logo-monogram.png" alt="BYP Studio" width="74" height="62" style="height:62px;width:auto"><span class="logo-word"><small>Kezelőfelület</small></span></a>
     <nav class="tabs" id="tabs" role="tablist" hidden>
-      <button class="tab" role="tab" data-tab="galeria" aria-selected="true">Galéria</button>
+      <button class="tab" role="tab" data-tab="naptar" aria-selected="true">Naptár</button>
+      <button class="tab" role="tab" data-tab="statisztika" aria-selected="false">Statisztika</button>
+      <button class="tab" role="tab" data-tab="galeria" aria-selected="false">Galéria</button>
       <button class="tab" role="tab" data-tab="foglalasok" aria-selected="false">Foglalások</button>
       <button class="tab" role="tab" data-tab="zaras" aria-selected="false">Szabadság, zárás</button>
       <button class="tab" role="tab" data-tab="vendegkonyv" aria-selected="false">Vendégkönyv <span class="badge" id="bGb" hidden></span></button>
@@ -136,6 +206,46 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
     <label class="field"><span>Jelszó</span><input id="pw" type="password" autocomplete="current-password" required></label>
     <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap"><button class="btn" type="submit"><svg class="ico"><use href="#i-lock"/></svg>Belépés</button><p class="status err" id="loginMsg" role="status"></p></div>
   </form>
+
+  <p class="visit-strip" id="visitStrip" hidden></p>
+
+  <!-- calendar (phone bookings) -->
+  <section id="tab-naptar" hidden>
+    <div class="card cal-card">
+      <div class="cal-top">
+        <div style="display:grid;gap:8px"><p class="eyebrow">Naptár</p><h2 id="calTitle">Ma</h2></div>
+        <div class="cal-ctrl">
+          <button class="mini nav-btn" id="calPrevDay" aria-label="Előző nap"><svg class="ico"><use href="#i-chevron-left"/></svg></button>
+          <button class="mini" id="calToday">Ma</button>
+          <button class="mini nav-btn" id="calNextDay" aria-label="Következő nap"><svg class="ico"><use href="#i-chevron-right"/></svg></button>
+          <input type="date" id="calDate" aria-label="Nap kiválasztása">
+          <button class="btn" id="calNew" type="button" style="min-height:42px;padding:0 1.2em">+ Új foglalás</button>
+        </div>
+      </div>
+      <div class="chip-row" id="calSpecs"></div>
+      <p class="muted small">Koppints egy üres sávra az időpont rögzítéséhez, vagy egy foglalásra a részletekért.</p>
+      <div class="cal-legend"><span><i class="lg online"></i>Online foglalás</span><span><i class="lg telefon"></i>Telefonos foglalás</span><span><i class="lg block"></i>Lezárva</span><span><i class="lg off"></i>Munkaidőn kívül</span></div>
+      <div class="cal-scroll"><div class="cal-grid" id="calGrid"></div></div>
+    </div>
+  </section>
+
+  <!-- statistics -->
+  <section id="tab-statisztika" hidden>
+    <div class="card">
+      <div style="display:grid;gap:8px"><p class="eyebrow">Látogatottság</p><h2>Honlap látogatói</h2>
+        <p class="muted small">Névtelen számlálás, süti nélkül. Egy látogató egy napon egyszer számít, akárhány oldalt néz meg.</p></div>
+      <div class="kpis" id="visitKpis"></div>
+      <div><p class="choice-t" style="margin-bottom:10px">Látogatók az elmúlt 30 napban</p><div id="visitChart"></div></div>
+    </div>
+    <div class="card">
+      <div style="display:grid;gap:8px"><p class="eyebrow">Szolgáltatások</p><h2>Mi mennyiszer történt?</h2>
+        <p class="muted small">A már megtörtént (mai napig esedékes) foglalások alapján, online és telefonos foglalásokkal együtt. A lemondott foglalások nem számítanak bele. A bevétel az árlista szerinti becslés.</p></div>
+      <div class="chip-row" id="stPeriod"></div>
+      <div class="chip-row" id="stSpec"></div>
+      <div class="kpis" id="stKpis"></div>
+      <div class="table-scroll"><table class="stable" id="stTable"></table></div>
+    </div>
+  </section>
 
   <!-- gallery -->
   <section id="tab-galeria" hidden>
@@ -209,6 +319,12 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
     </div>
   </section>
 </main>
-<script src="/assets/js/admin.js?v=20261011a" defer></script>
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal-box">
+    <div class="modal-head"><h2 id="modalTitle"></h2><button class="mini" id="modalClose" aria-label="Bezárás"><svg class="ico"><use href="#i-x"/></svg></button></div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+<script src="/assets/js/admin.js?v=20261012a" defer></script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 import { json, handle, store, spec, requireAdmin, mutateJSON, monthKey, newId, clean, salonNow, weekday, toMin, toT, overlaps, HttpError, DATE_RE, TIME_RE } from '../lib/util.mjs';
+import { resolveItems, createBooking, removeStat } from '../lib/booking.mjs';
 
 const IMG_TYPES = ['image/jpeg', 'image/webp', 'image/png'];
 const MAX_IMG = 5 * 1024 * 1024;
@@ -51,9 +52,10 @@ export default handle(async req => {
   // --- bookings list (from a date, default today) ---
   if (route === 'bookings' && M === 'GET') {
     const from = DATE_RE.test(url.searchParams.get('from') || '') ? url.searchParams.get('from') : salonNow().date;
+    const to = DATE_RE.test(url.searchParams.get('to') || '') ? url.searchParams.get('to') : '9999-12-31';
     const st = store('bookings');
     const { blobs } = await st.list();
-    const keys = blobs.map(b => b.key).filter(k => k.slice(0, 10) >= from).sort().slice(0, 400);
+    const keys = blobs.map(b => b.key).filter(k => k.slice(0, 10) >= from && k.slice(0, 10) <= to).sort().slice(0, 400);
     const items = (await Promise.all(keys.map(k => st.get(k, { type: 'json' })))).filter(Boolean);
     items.sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start));
     return json({ from, bookings: items });
@@ -70,6 +72,7 @@ export default handle(async req => {
       return doc;
     });
     await store('bookings').delete(`${b.date}/${b.spec}/${b.id}`);
+    await removeStat(b.date, b.id);
     return json({ ok: true });
   }
 
@@ -101,6 +104,47 @@ export default handle(async req => {
       created.push(rec);
     }
     return json({ ok: true, created });
+  }
+
+  // --- telefonos / kézi foglalás rögzítése ---
+  if (route === 'manual-book' && M === 'POST') {
+    const b = await req.json();
+    const s = spec(b.spec);
+    if (!s) throw new HttpError(400, 'bad', 'Válassz szakembert.');
+    if (!DATE_RE.test(b.date || '') || !TIME_RE.test(b.start || '')) throw new HttpError(400, 'bad', 'Add meg a napot és a kezdést.');
+    const extra = clean(b.extra, 120);
+    const resolved = (b.items || []).length ? resolveItems(s, b.items, { requireLength: false }) : null;
+    if (!resolved && !extra) throw new HttpError(400, 'bad', 'Válassz szolgáltatást, vagy írd be, mire jön a vendég.');
+    const dur = Math.round(Number(b.dur) || resolved?.dur || 30);
+    if (dur < 10 || dur > 720) throw new HttpError(400, 'bad', 'Az időtartam 10 perc és 12 óra között legyen.');
+    const name = clean(b.name, 80);
+    if (name.length < 2) throw new HttpError(400, 'bad', 'Add meg a vendég nevét.');
+    const bk = await createBooking({ s, date: b.date, start: b.start, dur, resolved, extraLabel: extra, force: !!b.force,
+      contact: { name, phone: clean(b.phone, 30), email: '', note: clean(b.note, 500) }, source: 'telefon' });
+    return json({ ok: true, booking: bk });
+  }
+
+  // --- látogatottság ---
+  if (route === 'visits' && M === 'GET') {
+    const st = store('stats');
+    const { blobs } = await st.list({ prefix: 'visits/' });
+    const days = [];
+    for (const { key } of blobs) {
+      const doc = (await st.get(key, { type: 'json' })) || {};
+      const ym = key.slice(7);
+      for (const [d, v] of Object.entries(doc)) days.push({ date: `${ym}-${d}`, pv: v.pv || 0, uv: (v.u || []).length });
+    }
+    days.sort((a, b) => a.date.localeCompare(b.date));
+    return json({ today: salonNow().date, days });
+  }
+
+  // --- szolgáltatás-statisztika (névtelen bejegyzések) ---
+  if (route === 'stats' && M === 'GET') {
+    const st = store('stats');
+    const { blobs } = await st.list({ prefix: 'svc/' });
+    const entries = [];
+    for (const { key } of blobs) entries.push(...((await st.get(key, { type: 'json' })) || []));
+    return json({ today: salonNow().date, entries });
   }
 
   // --- guestbook moderation ---

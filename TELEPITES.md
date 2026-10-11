@@ -33,7 +33,8 @@ npx netlify-cli deploy --prod
 - A közös fejléc és lábléc a `tools/src/full.html` fájlból készül a `python3 tools/build_pages.py` paranccsal.
 
 ## Használat
-- Kezelőfelület: `https://<oldal-neve>.netlify.app/feltoltes/` – galéria, foglalások, szabadság, vendégkönyv (jóváhagyás, válasz), visszajelzések
+- Kezelőfelület: `https://<oldal-neve>.netlify.app/feltoltes/` – naptár (telefonos foglalások rögzítése), statisztika (látogatók, szolgáltatások), galéria, foglalások, szabadság, vendégkönyv, visszajelzések
+- Tipp: a kezelőfelületet érdemes a tablet/telefon kezdőképernyőjére menteni (Megosztás → Hozzáadás a kezdőképernyőhöz).
 - Az új vendégkönyv-bejegyzések csak jóváhagyás után jelennek meg.
 
 ## Frissítés (ha már fent van az oldal)
