@@ -21,7 +21,8 @@ export const SPECIALISTS = [
     // Fodrász árlista (érvényes: 2026. január 24-től). Árak forintban, bruttó szalonárak.
     // prices: [rövid, félhosszú, hosszú] – null = nem elérhető. price: egy ár. priceText: szöveges ár.
     // dur: időtartam percben (a naptár ennyi időt foglal le) – szükség szerint módosítható.
-    // pause: [tól, ig] perc a szolgáltatás kezdetétől = hatóidő, ekkor a 'pauseOk' szolgáltatás (férfi hajvágás) foglalható.
+    // pause: [tól, ig] perc a szolgáltatás kezdetétől = hatóidő (festés, melír, szőkítés, balayage).
+    // A hatóidőbe a 30–45 perces szolgáltatások foglalhatók (automatikus; egyedileg 'pauseOk: true/false'-szal felülírható).
     priceNotes: [
       'A végső ár a felhasznált anyagmennyiségtől függ.',
       'Plusz anyagköltség: 60 Ft/gramm.',
@@ -36,13 +37,13 @@ export const SPECIALISTS = [
             { id: 'noi-szaraz', name: 'Női száraz hajvágás', dur: 30, prices: [4500, 5000, 5500] },
             { id: 'noi-mosas-szaritas', name: 'Mosás + szárítás', dur: 45, prices: [5000, 6000, 7000] },
             { id: 'noi-mvsz', name: 'Mosás + vágás + szárítás', dur: 60, prices: [7000, 8000, 9000] },
-            { id: 'noi-festes', name: 'Festés (60 g festékig) + festék 60 Ft/g', dur: 120, pause: [30, 60], prices: [10500, 13500, 17500] },
-            { id: 'noi-tofestes', name: 'Tőfestés', dur: 90, pause: [30, 60], prices: [6500, 8500, 10500] },
-            { id: 'noi-folias', name: 'Fóliás melír', dur: 150, prices: [null, 18500, 20500] },
-            { id: 'noi-sapkas', name: 'Sapkás melír', dur: 120, prices: [13500, 18500, 21500] },
-            { id: 'noi-balayage', name: 'Balayage / ombre', dur: 180, prices: [null, 25000, 30000] },
-            { id: 'noi-szokites', name: 'Szőkítés', dur: 120, prices: [6500, 9000, 13500] },
-            { id: 'noi-toszokites', name: 'Tő szőkítés', dur: 90, prices: [4500, 5500, 5500] },
+            { id: 'noi-festes', name: 'Festés (60 g festékig) + festék 60 Ft/g', dur: 120, pause: [30, 75], prices: [10500, 13500, 17500] },
+            { id: 'noi-tofestes', name: 'Tőfestés', dur: 90, pause: [30, 75], prices: [6500, 8500, 10500] },
+            { id: 'noi-folias', name: 'Fóliás melír', dur: 150, pause: [30, 75], prices: [null, 18500, 20500] },
+            { id: 'noi-sapkas', name: 'Sapkás melír', dur: 120, pause: [30, 75], prices: [13500, 18500, 21500] },
+            { id: 'noi-balayage', name: 'Balayage / ombre', dur: 180, pause: [30, 75], prices: [null, 25000, 30000] },
+            { id: 'noi-szokites', name: 'Szőkítés', dur: 120, pause: [30, 75], prices: [6500, 9000, 13500] },
+            { id: 'noi-toszokites', name: 'Tő szőkítés', dur: 90, pause: [30, 75], prices: [4500, 5500, 5500] },
             { id: 'noi-alkalmi', name: 'Alkalmi frizura', dur: 60, prices: [11500, 16500, 20500] },
             { id: 'noi-vasalas', name: 'Hajvasalás', dur: 30, prices: [null, 3500, 4000] },
             { id: 'noi-sutes', name: 'Hajsütés', dur: 45, prices: [null, 6000, 7000] },
@@ -67,7 +68,7 @@ export const SPECIALISTS = [
         id: 'ferfi', name: 'Férfi', icon: 'scissors',
         groups: [
           { name: 'Férfi', services: [
-            { id: 'ferfi-vagas', name: 'Férfi hajvágás', dur: 30, pauseOk: true, price: 4500 },
+            { id: 'ferfi-vagas', name: 'Férfi hajvágás', dur: 30, price: 4500 },
           ] },
         ],
       },
@@ -121,3 +122,5 @@ for (const sp of SPECIALISTS) {
   if (!sp.categories) continue;
   sp.services = sp.categories.flatMap(c => c.groups.flatMap(g => g.services.map(v => ({ ...v, cat: c.id, catName: c.name, group: g.name }))));
 }
+// Hatóidőbe foglalható szolgáltatások: 30–45 percesek (ha nincs külön megadva)
+for (const sp of SPECIALISTS) for (const v of sp.services) if (v.pauseOk === undefined) v.pauseOk = !v.pause && v.dur >= 30 && v.dur <= 45;
