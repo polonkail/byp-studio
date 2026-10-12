@@ -5,7 +5,7 @@ export const SALON = {
   name: 'BYP Stúdió',
   timeZone: 'Europe/Budapest',
   stepMinutes: 30,      // ilyen lépésközzel kínálunk kezdési időpontokat
-  daysAhead: 30,        // ennyi napra előre lehet foglalni
+  daysAhead: 365,       // ennyi napra előre lehet foglalni (1 év)
   minLeadMinutes: 60,   // legalább ennyivel előbb kell foglalni
 };
 

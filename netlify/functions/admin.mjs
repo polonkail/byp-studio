@@ -1,5 +1,5 @@
 import { json, handle, store, spec, requireAdmin, mutateJSON, monthKey, newId, clean, salonNow, weekday, toMin, toT, overlaps, HttpError, DATE_RE, TIME_RE, loadSchedule, defaultHours } from '../lib/util.mjs';
-import { resolveItems, createBooking, removeStat } from '../lib/booking.mjs';
+import { resolveItems, createBooking, removeStat, annotate } from '../lib/booking.mjs';
 import { gcalPush, gcalRemove, gcalBusy, gcalEnabled, gcalDiagnose } from '../lib/gcal.mjs';
 
 const IMG_TYPES = ['image/jpeg', 'image/webp', 'image/png'];
@@ -60,6 +60,10 @@ export default handle(async req => {
     const keys = blobs.map(b => b.key).filter(k => k.slice(0, 10) >= from && k.slice(0, 10) <= to).sort().slice(0, 400);
     const items = (await Promise.all(keys.map(k => st.get(k, { type: 'json' })))).filter(Boolean);
     items.sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start));
+    for (const b of items) {
+      const s = spec(b.spec);
+      if (b.type === 'booking' && s) { const a = annotate(s, { start: b.start, dur: b.dur, svcs: (b.items || []).map(i => i.svc) }); b.soft = a.soft; b.fill = a.fill; }
+    }
     return json({ from, bookings: items });
   }
 
@@ -96,8 +100,8 @@ export default handle(async req => {
       await mutateJSON(store('days'), monthKey(s.id, b.date), doc => {
         doc = doc || {};
         const items = doc[b.date] || [];
-        if (!b.force && overlaps(items, start, dur)) throw new HttpError(409, 'conflict', `${s.name}: erre az időszakra már van foglalás. Előbb mondd le, vagy válassz másik időszakot.`);
-        items.push({ start: from, dur, id });
+        if (!b.force && overlaps(items.map(i => annotate(s, i)), start, dur)) throw new HttpError(409, 'conflict', `${s.name}: erre az időszakra már van foglalás. Előbb mondd le, vagy válassz másik időszakot.`);
+        items.push({ start: from, dur, id, svcs: [] });
         items.sort((x, y) => x.start.localeCompare(y.start));
         doc[b.date] = items;
         return doc;

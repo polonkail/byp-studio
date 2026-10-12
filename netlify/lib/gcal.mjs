@@ -101,26 +101,39 @@ function local(iso) {
 const pad = n => String(n).padStart(2, '0');
 const hhmm = m => pad(Math.floor(m / 60)) + ':' + pad(m % 60);
 
-/** A Google Naptárban foglalt idősávok (pl. Petra saját bejegyzései) napokra bontva: { 'YYYY-MM-DD': [{start, dur}] } */
+/** A Google Naptárban foglalt idősávok napokra bontva: { 'YYYY-MM-DD': [{start, dur}] }.
+ *  Csak a szakember SAJÁT bejegyzései számítanak: a weboldalról felírt foglalásokat (azonosító: „bk…”)
+ *  és a „szabad”-ként jelölt eseményeket kihagyjuk, mert azok már a weboldal naptárában szerepelnek. */
 export async function gcalBusy(specId, fromDate, toDate) {
   const cal = calendarFor(specId);
   if (!cal || !account()) return {};
   const off = d => new Date(`${d}T00:00:00Z`);
   const timeMin = new Date(off(fromDate).getTime() - 2 * 3600e3).toISOString();
   const timeMax = new Date(off(toDate).getTime() + 26 * 3600e3).toISOString();
-  let d;
-  try { d = await call('POST', '/freeBusy', { timeMin, timeMax, timeZone: SALON.timeZone, items: [{ id: cal }] }); }
-  catch (e) { console.error(e.message); return {}; }
+  const evs = [];
+  try {
+    let page = '';
+    for (let i = 0; i < 20; i++) {
+      const q = new URLSearchParams({ timeMin, timeMax, singleEvents: 'true', maxResults: '2500', showDeleted: 'false', fields: 'nextPageToken,items(id,status,transparency,start,end)' });
+      if (page) q.set('pageToken', page);
+      const d = await call('GET', `/calendars/${encodeURIComponent(cal)}/events?${q}`);
+      evs.push(...(d?.items || []));
+      if (!(page = d?.nextPageToken)) break;
+    }
+  } catch (e) { console.error(e.message); return {}; }
   const out = {};
-  for (const iv of d?.calendars?.[cal]?.busy || []) {
-    let s = local(iv.start), e = local(iv.end);
-    // több napos eseményt napokra bontjuk
+  const add = (s, e) => {
     while (s.date < e.date) {
       (out[s.date] ||= []).push({ start: hhmm(s.min), dur: 24 * 60 - s.min });
       const nd = new Date(`${s.date}T12:00:00Z`); nd.setUTCDate(nd.getUTCDate() + 1);
       s = { date: nd.toISOString().slice(0, 10), min: 0 };
     }
     if (e.min > s.min) (out[s.date] ||= []).push({ start: hhmm(s.min), dur: e.min - s.min });
+  };
+  for (const ev of evs) {
+    if (ev.status === 'cancelled' || ev.transparency === 'transparent' || /^bk/.test(ev.id || '')) continue;
+    if (ev.start?.dateTime) add(local(ev.start.dateTime), local(ev.end.dateTime));
+    else if (ev.start?.date) add({ date: ev.start.date, min: 0 }, { date: ev.end.date, min: 0 }); // egész napos (pl. szabadság)
   }
   return out;
 }

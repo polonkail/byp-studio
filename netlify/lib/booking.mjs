@@ -38,18 +38,51 @@ export function resolveItems(s, rawItems, { requireLength = true } = {}) {
   return { items, dur, label, price, priceSum: numeric.reduce((a, i) => a + i.price, 0), soft, fill };
 }
 
+/** Egy naptári tétel kiegészítése a hatóidő-adatokkal a JELENLEGI beállítások alapján (svcs = szolgáltatás-azonosítók). */
+export function annotate(s, it) {
+  if (!Array.isArray(it.svcs)) return it;
+  const st = toMin(it.start), soft = []; let off = 0;
+  for (const id of it.svcs) {
+    const v = s.services.find(x => x.id === id);
+    if (!v) continue;
+    if (v.pause) soft.push([st + off + v.pause[0], st + off + v.pause[1]]);
+    off += v.dur;
+  }
+  const fill = !!(it.svcs.length && !it.x && it.svcs.every(id => s.services.find(x => x.id === id)?.pauseOk));
+  return { start: it.start, dur: it.dur, id: it.id, fill, soft: soft.filter(([, e]) => e <= st + it.dur) };
+}
+
+/** Régi naptári tételek kiegészítése a szolgáltatás-azonosítókkal (egyszeri, a foglalási adatokból). */
+export async function migrateMonth(s, key) {
+  const st = store('days');
+  const doc = await st.get(key, { type: 'json' });
+  if (!doc || !Object.values(doc).some(items => items.some(i => !Array.isArray(i.svcs)))) return doc;
+  const recs = {};
+  for (const [date, items] of Object.entries(doc)) for (const i of items) if (!Array.isArray(i.svcs))
+    recs[i.id] = await store('bookings').get(`${date}/${s.id}/${i.id}`, { type: 'json' }).catch(() => null);
+  return mutateJSON(st, key, d => {
+    d = d || {};
+    for (const items of Object.values(d)) for (const i of items) if (!Array.isArray(i.svcs)) {
+      const r = recs[i.id];
+      i.svcs = r?.type === 'booking' ? (r.items || []).map(x => x.svc) : [];
+      delete i.soft; delete i.fill;
+    }
+    return d;
+  });
+}
+
 /** Lefoglalja az időpontot a naptárban, elmenti a foglalást és a névtelen statisztikát. */
 export async function createBooking({ s, date, start, dur, resolved, contact, source, force = false, extraLabel = '' }) {
   const id = newId();
   const startMin = toMin(start);
-  const fill = !!(resolved?.fill && !extraLabel);
-  const soft = (resolved?.soft || []).map(([a, b]) => [startMin + a, startMin + b]).filter(([a, b]) => b <= startMin + dur);
-  const me = { fill, soft };
+  const entry = { start, dur, id, svcs: resolved ? resolved.items.map(i => i.svc) : [], ...(extraLabel ? { x: 1 } : {}) };
+  const me = annotate(s, entry);
+  await migrateMonth(s, monthKey(s.id, date));
   await mutateJSON(store('days'), monthKey(s.id, date), doc => {
     doc = doc || {};
     const items = doc[date] || [];
-    if (!force && overlaps(items, startMin, dur, me)) throw new HttpError(409, 'taken', 'Ezt az időpontot közben valaki lefoglalta. Válassz egy másikat.');
-    items.push({ start, dur, id, ...(fill ? { fill } : {}), ...(soft.length ? { soft } : {}) });
+    if (!force && overlaps(items.map(i => annotate(s, i)), startMin, dur, me)) throw new HttpError(409, 'taken', 'Ezt az időpontot közben valaki lefoglalta. Válassz egy másikat.');
+    items.push(entry);
     items.sort((x, y) => x.start.localeCompare(y.start));
     doc[date] = items;
     return doc;
@@ -58,7 +91,7 @@ export async function createBooking({ s, date, start, dur, resolved, contact, so
   const booking = {
     id, type: 'booking', source, spec: s.id, specName: s.name,
     items: resolved ? resolved.items.map(({ svc, name, cat, length, price, priceText }) => ({ svc, name, cat, length, price, priceText })) : [],
-    svcName, price: resolved?.price || '', date, start, end: toT(startMin + dur), dur, ...(fill ? { fill } : {}), ...(soft.length ? { soft } : {}),
+    svcName, price: resolved?.price || '', date, start, end: toT(startMin + dur), dur,
     ...contact, createdAt: new Date().toISOString(),
   };
   await store('bookings').setJSON(`${date}/${s.id}/${id}`, booking);
