@@ -1,6 +1,6 @@
 import { json, handle, store, spec, requireAdmin, mutateJSON, monthKey, newId, clean, salonNow, weekday, toMin, toT, overlaps, HttpError, DATE_RE, TIME_RE, loadSchedule, defaultHours } from '../lib/util.mjs';
 import { resolveItems, createBooking, removeStat } from '../lib/booking.mjs';
-import { gcalPush, gcalRemove, gcalBusy, gcalEnabled } from '../lib/gcal.mjs';
+import { gcalPush, gcalRemove, gcalBusy, gcalEnabled, gcalDiagnose } from '../lib/gcal.mjs';
 
 const IMG_TYPES = ['image/jpeg', 'image/webp', 'image/png'];
 const MAX_IMG = 5 * 1024 * 1024;
@@ -178,6 +178,22 @@ export default handle(async req => {
   }
 
   // --- Google Naptár foglaltság egy napra (a kezelőfelület naptárához) ---
+  // --- Google Naptár: kapcsolat ellenőrzése ---
+  if (route === 'gcal-test' && M === 'GET') {
+    const ids = ['petra', 'csilla', 'andrea', 'viktoria'].filter(id => spec(id) && spec(id).booking !== 'messenger');
+    return json(await gcalDiagnose(ids));
+  }
+  // --- Google Naptár: a már meglévő (mai és jövőbeli) foglalások felírása ---
+  if (route === 'gcal-sync' && M === 'POST') {
+    const from = salonNow().date, st = store('bookings');
+    const { blobs } = await st.list();
+    let n = 0;
+    for (const k of blobs.map(b => b.key).filter(k => k.slice(0, 10) >= from)) {
+      const b = await st.get(k, { type: 'json' });
+      if (b && gcalEnabled(b.spec)) { await gcalPush(b); n++; }
+    }
+    return json({ ok: true, count: n });
+  }
   if (route === 'gbusy' && M === 'GET') {
     const date = url.searchParams.get('date');
     if (!DATE_RE.test(date || '')) throw new HttpError(400, 'bad', 'Hibás dátum.');

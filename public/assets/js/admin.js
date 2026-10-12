@@ -375,8 +375,10 @@
       for (const b of own) {
         const kind = b.type === 'block' ? 'block' : (b.source === 'telefon' ? 'telefon' : 'online');
         const top = yPos(Math.max(DAY_S, toMinA(b.start))), h = Math.max(22, yPos(Math.min(DAY_E, toMinA(b.end))) - top - 2);
-        col.append(el('button', { type: 'button', class: 'cal-ev ' + kind, style: `top:${top}px;height:${h}px`, onclick: e => { e.stopPropagation(); showBooking(b); } },
-          el('b', {}, `${b.start}–${b.end} ${b.type === 'block' ? 'Lezárva' : b.name}`), el('small', {}, b.type === 'block' ? (b.note || '') : b.svcName)));
+        // hatóidő-sáv (pl. festés közben): ide férfi hajvágás foglalható; az ott lévő foglalás jobb oldalt jelenik meg
+        const pauses = (b.soft || []).map(([a, e]) => el('span', { class: 'cal-pause', style: `top:${yPos(a) - top}px;height:${yPos(e) - yPos(a)}px` }, 'hatóidő'));
+        col.append(el('button', { type: 'button', class: 'cal-ev ' + kind + (b.fill && own.some(o => o !== b && o.soft && toMinA(o.start) < toMinA(b.end) && toMinA(b.start) < toMinA(o.end)) ? ' in-pause' : ''), style: `top:${top}px;height:${h}px`, onclick: e => { e.stopPropagation(); showBooking(b); } },
+          el('b', {}, `${b.start}–${b.end} ${b.type === 'block' ? 'Lezárva' : b.name}`), el('small', {}, b.type === 'block' ? (b.note || '') : b.svcName), ...pauses));
       }
       col.addEventListener('click', e => {
         const r = col.getBoundingClientRect();
@@ -459,6 +461,26 @@
       el('div', { class: 'item-actions' }, el('button', { class: 'btn', type: 'button', onclick: () => save(false) }, 'Foglalás mentése'), msg));
     setTimeout(() => nameIn.focus(), 50);
   }
+  // Google Naptár kapcsolat-ellenőrzés
+  $('#gcalTest')?.addEventListener('click', async () => {
+    const out = $('#gcalOut'), btn = $('#gcalTest');
+    btn.disabled = true; out.replaceChildren(el('p', { class: 'muted' }, 'Ellenőrzés folyamatban…'));
+    const row = (ok, title, msg) => el('div', { class: 'gc-row ' + (ok === true ? 'ok' : ok === false ? 'bad' : 'na') }, el('b', {}, (ok === true ? '✓ ' : ok === false ? '✗ ' : '– ') + title), el('span', {}, msg));
+    try {
+      const r = await api('/api/admin/gcal-test');
+      const rows = [row(r.account.ok, 'Szolgáltatásfiók kulcs', r.account.ok ? `Rendben (${r.account.email})` : r.account.msg)];
+      for (const s of r.specs || []) rows.push(row(s.ok, `${specName(s.spec)} (${s.env}${s.calendar ? ' = ' + s.calendar : ''})`, s.msg));
+      out.replaceChildren(...rows);
+      $('#gcalSync').hidden = !(r.specs || []).some(s => s.ok);
+    } catch (e) { out.replaceChildren(row(false, 'Hiba', e.message)); }
+    btn.disabled = false;
+  });
+  $('#gcalSync')?.addEventListener('click', async () => {
+    const btn = $('#gcalSync'); btn.disabled = true;
+    try { const r = await post('/api/admin/gcal-sync', {}); alertMsg(`${r.count} foglalás felírva a Google Naptárba.`); }
+    catch (e) { alertMsg(e.message); }
+    btn.disabled = false;
+  });
   $('#calPrevDay').addEventListener('click', () => { calDate = addD(calDate, -1); loadCal(); });
   $('#calNextDay').addEventListener('click', () => { calDate = addD(calDate, 1); loadCal(); });
   $('#calToday').addEventListener('click', () => { calDate = ymdL(new Date()); loadCal(); });

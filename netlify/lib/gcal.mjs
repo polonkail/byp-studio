@@ -9,12 +9,21 @@ import { SALON } from './config.mjs';
 let cachedToken = null, tokenExp = 0;
 const b64url = buf => Buffer.from(buf).toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 
-function account() {
-  const raw = process.env.GOOGLE_SERVICE_ACCOUNT;
-  if (!raw) return null;
-  try { const j = JSON.parse(raw); return j.client_email && j.private_key ? { email: j.client_email, key: j.private_key.replace(/\\n/g, '\n') } : null; }
-  catch { console.error('gcal: GOOGLE_SERVICE_ACCOUNT nem érvényes JSON'); return null; }
+// A kulcs megadható a teljes JSON-nal (GOOGLE_SERVICE_ACCOUNT), base64-ben, vagy két külön változóban
+// (GOOGLE_CLIENT_EMAIL + GOOGLE_PRIVATE_KEY). Visszaad: { email, key } vagy { error }.
+function readAccount() {
+  const fixKey = k => String(k || '').replace(/\\n/g, '\n').replace(/^"|"$/g, '').trim();
+  if (process.env.GOOGLE_CLIENT_EMAIL && process.env.GOOGLE_PRIVATE_KEY)
+    return { email: process.env.GOOGLE_CLIENT_EMAIL.trim(), key: fixKey(process.env.GOOGLE_PRIVATE_KEY) };
+  let raw = (process.env.GOOGLE_SERVICE_ACCOUNT || '').trim();
+  if (!raw) return { error: 'missing' };
+  if (!raw.startsWith('{')) { try { const dec = Buffer.from(raw, 'base64').toString('utf8').trim(); if (dec.startsWith('{')) raw = dec; } catch {} }
+  if (raw.startsWith("'") || (raw.startsWith('"') && !raw.startsWith('{'))) raw = raw.slice(1, -1);
+  let j; try { j = JSON.parse(raw); } catch { return { error: 'json' }; }
+  if (!j.client_email || !j.private_key) return { error: 'fields' };
+  return { email: j.client_email, key: fixKey(j.private_key) };
 }
+function account() { const a = readAccount(); if (a.error) { if (a.error !== 'missing') console.error('gcal: hibás GOOGLE_SERVICE_ACCOUNT (' + a.error + ')'); return null; } return a; }
 export const calendarFor = specId => process.env['GCAL_' + String(specId).toUpperCase()] || null;
 export const gcalEnabled = specId => !!(calendarFor(specId) && account());
 
@@ -66,6 +75,7 @@ export async function gcalPush(b) {
     end: { dateTime: `${b.date}T${b.end}:00`, timeZone: tz },
     colorId: isBlock ? '8' : (b.source === 'telefon' ? '2' : '5'),
     reminders: { useDefault: true },
+    transparency: 'transparent', // a saját foglalásaink ne duplázódjanak a „foglalt” lekérdezésben
   };
   try { await call('POST', `/calendars/${encodeURIComponent(cal)}/events`, ev); }
   catch (e) {
@@ -111,6 +121,53 @@ export async function gcalBusy(specId, fromDate, toDate) {
       s = { date: nd.toISOString().slice(0, 10), min: 0 };
     }
     if (e.min > s.min) (out[s.date] ||= []).push({ start: hhmm(s.min), dur: e.min - s.min });
+  }
+  return out;
+}
+
+/** Kapcsolat-ellenőrzés az admin felülethez: lépésenként megmondja, hol akad el a szinkron. */
+export async function gcalDiagnose(specIds) {
+  const out = { account: null, specs: [] };
+  const a = readAccount();
+  if (a.error) {
+    out.account = { ok: false, msg: {
+      missing: 'Nincs beállítva a GOOGLE_SERVICE_ACCOUNT környezeti változó a Netlify-ban (vagy beállítás után nem volt új deploy, vagy a változó hatóköre nem tartalmazza a „Functions” részt).',
+      json: 'A GOOGLE_SERVICE_ACCOUNT értéke nem érvényes JSON. A letöltött .json fájl TELJES tartalmát kell bemásolni, a { jeltől a } jelig.',
+      fields: 'A GOOGLE_SERVICE_ACCOUNT JSON-ból hiányzik a client_email vagy a private_key. Biztosan a szolgáltatásfiók KULCS fájlját másoltad be?',
+    }[a.error] };
+    return out;
+  }
+  out.account = { ok: true, email: a.email };
+  try { cachedToken = null; await token(); }
+  catch (e) { out.account = { ok: false, email: a.email, msg: /fetch failed/i.test(e.message) ? 'Nem sikerült elérni a Google szervereit, próbáld újra pár perc múlva.' : 'A Google nem fogadta el a kulcsot: ' + e.message + '. Lehet, hogy a kulcsot törölték, vagy a private_key megsérült másoláskor – készíts új JSON kulcsot.' }; return out; }
+  for (const id of specIds) {
+    const cal = calendarFor(id);
+    const r = { spec: id, env: 'GCAL_' + id.toUpperCase(), calendar: cal };
+    out.specs.push(r);
+    if (!cal) { r.ok = null; r.msg = 'Nincs beállítva (nem kötelező).'; continue; }
+    try { await call('GET', `/calendars/${encodeURIComponent(cal)}`); }
+    catch (e) {
+      r.ok = false;
+      r.msg = e.status === 403 && /has not been used|disabled/i.test(e.message)
+        ? 'A Google Calendar API nincs bekapcsolva a Google Cloud projektben (APIs & Services → Library → Google Calendar API → Enable).'
+        : e.status === 404 || e.status === 403
+          ? `A naptár nincs megosztva a szolgáltatásfiókkal. A ${cal} fiók Google Naptárában: Beállítások → a naptár neve → „Megosztás adott személyekkel” → ${a.email} → „Módosíthatja az eseményeket”.`
+          : 'Hiba: ' + e.message;
+      continue;
+    }
+    // írási jog próbája: tesztesemény létrehozása és azonnali törlése
+    const tid = 'bktest' + Date.now().toString(16);
+    const t0 = new Date(Date.now() + 86400e3), t1 = new Date(t0.getTime() + 15 * 60e3);
+    try {
+      await call('POST', `/calendars/${encodeURIComponent(cal)}/events`, { id: tid, summary: 'BYP teszt', start: { dateTime: t0.toISOString() }, end: { dateTime: t1.toISOString() }, transparency: 'transparent' });
+      await call('DELETE', `/calendars/${encodeURIComponent(cal)}/events/${tid}`).catch(() => {});
+      r.ok = true; r.msg = 'Rendben: a naptár elérhető, és a weboldal tud bele írni.';
+    } catch (e) {
+      r.ok = false;
+      r.msg = e.status === 403
+        ? `A naptár meg van osztva, de csak megtekintési joggal. Állítsd át „Módosíthatja az eseményeket” jogra (${a.email}).`
+        : 'Írási hiba: ' + e.message;
+    }
   }
   return out;
 }

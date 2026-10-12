@@ -9,7 +9,7 @@
 <link rel="icon" href="/assets/img/favicon-512.png" type="image/png" sizes="512x512">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <link rel="preload" href="/assets/fonts/cormorant-garamond-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/css/site.css?v=20261021c">
+<link rel="stylesheet" href="/assets/css/site.css?v=20261021e">
 <style>
 body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fixed}
 .adm-head{background:var(--noir);color:#f4ede6;padding-top:env(safe-area-inset-top,0px)}
@@ -80,6 +80,11 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
 .lg.block{background:repeating-linear-gradient(135deg,#e6e0da 0 4px,#f4f0eb 4px 8px)}
 .lg.off{background:#ece8e4}
 .lg.gcal{background:#e3e8f3;border-left:3px solid #4a6aa8}
+.gc-row{display:grid;gap:3px;padding:10px 14px;border-left:3px solid var(--stone-lt);background:#f7f4f0;font-size:.9rem}
+.gc-row.ok{border-color:var(--free);background:#eef5f0}
+.gc-row.bad{border-color:#b4553f;background:#f8ece8}
+.cal-ev.in-pause{left:50%;z-index:3;box-shadow:-2px 0 0 #fff}
+.cal-pause{position:absolute;left:50%;right:0;border:1px dashed var(--stone-lt);border-right:0;background:rgba(255,255,255,.55);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--stone);display:flex;align-items:center;justify-content:center;pointer-events:none}
 .cal-ev.gcal{background:#e3e8f3;border-left:3px solid #4a6aa8;opacity:.9}
 .cal-scroll{overflow-x:auto;border:1px solid rgba(34,28,30,.12);background:#fff}
 .cal-grid{display:grid;grid-template-columns:56px repeat(var(--cols,1),minmax(150px,1fr));min-width:fit-content;position:relative}
@@ -245,6 +250,13 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
       <div class="cal-legend"><span><i class="lg online"></i>Online foglalás</span><span><i class="lg telefon"></i>Telefonos foglalás</span><span><i class="lg block"></i>Lezárva</span><span><i class="lg gcal"></i>Google Naptár</span><span><i class="lg off"></i>Munkaidőn kívül</span></div>
       <div class="cal-scroll"><div class="cal-grid" id="calGrid"></div></div>
     </div>
+    <div class="card" id="gcalCard" style="margin-top:18px;display:grid;gap:12px">
+      <div><p class="eyebrow">Google Naptár</p><h2>Szinkron ellenőrzése</h2></div>
+      <p class="muted small">Megnézi, hogy a weboldal eléri-e a fodrász és a kéz- és lábápoló Google Naptárát, és ha valami hiányzik, megmondja, mit kell beállítani.</p>
+      <div class="chip-row"><button class="btn" id="gcalTest" type="button" style="min-height:42px;padding:0 1.2em">Kapcsolat ellenőrzése</button>
+      <button class="mini" id="gcalSync" type="button" hidden>Meglévő foglalások felírása a Google Naptárba</button></div>
+      <div id="gcalOut" style="display:grid;gap:8px"></div>
+    </div>
   </section>
 
   <!-- statistics -->
@@ -350,6 +362,6 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
     <div id="modalBody"></div>
   </div>
 </div>
-<script src="/assets/js/admin.js?v=20261021c" defer></script>
+<script src="/assets/js/admin.js?v=20261021e" defer></script>
 </body>
 </html>

@@ -16,7 +16,7 @@ export default handle(async req => {
   for (const m of months) {
     const doc = await st.get(`${s.id}/${m}`, { type: 'json' });
     for (const [date, items] of Object.entries(doc || {})) {
-      if (date >= now.date && date <= last) days[date] = items.map(({ start, dur }) => ({ start, dur }));
+      if (date >= now.date && date <= last) days[date] = items.map(({ start, dur, fill, soft }) => ({ start, dur, ...(fill ? { fill } : {}), ...(soft ? { soft } : {}) }));
     }
   }
   // a szakember Google Naptárában lévő egyéb bejegyzések is foglaltnak számítanak

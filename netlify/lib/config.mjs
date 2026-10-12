@@ -21,6 +21,7 @@ export const SPECIALISTS = [
     // Fodrász árlista (érvényes: 2026. január 24-től). Árak forintban, bruttó szalonárak.
     // prices: [rövid, félhosszú, hosszú] – null = nem elérhető. price: egy ár. priceText: szöveges ár.
     // dur: időtartam percben (a naptár ennyi időt foglal le) – szükség szerint módosítható.
+    // pause: [tól, ig] perc a szolgáltatás kezdetétől = hatóidő, ekkor a 'pauseOk' szolgáltatás (férfi hajvágás) foglalható.
     priceNotes: [
       'A végső ár a felhasznált anyagmennyiségtől függ.',
       'Plusz anyagköltség: 60 Ft/gramm.',
@@ -35,8 +36,8 @@ export const SPECIALISTS = [
             { id: 'noi-szaraz', name: 'Női száraz hajvágás', dur: 30, prices: [4500, 5000, 5500] },
             { id: 'noi-mosas-szaritas', name: 'Mosás + szárítás', dur: 45, prices: [5000, 6000, 7000] },
             { id: 'noi-mvsz', name: 'Mosás + vágás + szárítás', dur: 60, prices: [7000, 8000, 9000] },
-            { id: 'noi-festes', name: 'Festés (60 g festékig) + festék 60 Ft/g', dur: 120, prices: [10500, 13500, 17500] },
-            { id: 'noi-tofestes', name: 'Tőfestés', dur: 90, prices: [6500, 8500, 10500] },
+            { id: 'noi-festes', name: 'Festés (60 g festékig) + festék 60 Ft/g', dur: 120, pause: [30, 60], prices: [10500, 13500, 17500] },
+            { id: 'noi-tofestes', name: 'Tőfestés', dur: 90, pause: [30, 60], prices: [6500, 8500, 10500] },
             { id: 'noi-folias', name: 'Fóliás melír', dur: 150, prices: [null, 18500, 20500] },
             { id: 'noi-sapkas', name: 'Sapkás melír', dur: 120, prices: [13500, 18500, 21500] },
             { id: 'noi-balayage', name: 'Balayage / ombre', dur: 180, prices: [null, 25000, 30000] },
@@ -66,7 +67,7 @@ export const SPECIALISTS = [
         id: 'ferfi', name: 'Férfi', icon: 'scissors',
         groups: [
           { name: 'Férfi', services: [
-            { id: 'ferfi-vagas', name: 'Férfi hajvágás', dur: 30, price: 4500 },
+            { id: 'ferfi-vagas', name: 'Férfi hajvágás', dur: 30, pauseOk: true, price: 4500 },
           ] },
         ],
       },

@@ -31,7 +31,7 @@ export default handle(async req => {
   if (b.date === now.date && start < now.minutes + SALON.minLeadMinutes) throw new HttpError(400, 'too_soon', 'Ez az időpont már nem foglalható.');
 
   const gb = (await gcalBusy(s.id, b.date, b.date))[b.date] || [];
-  if (overlaps(gb, start, resolved.dur)) throw new HttpError(409, 'taken', 'Ez az időpont már foglalt. Kérjük, válassz másikat.');
+  if (overlaps(gb, start, resolved.dur, { fill: resolved.fill, soft: resolved.soft.map(([a, e]) => [start + a, start + e]) })) throw new HttpError(409, 'taken', 'Ez az időpont már foglalt. Kérjük, válassz másikat.');
 
   const bk = await createBooking({ s, date: b.date, start: b.start, dur: resolved.dur, resolved, contact: { name, phone, email, note }, source: 'online' });
   return json({ ok: true, id: bk.id, booking: { specName: s.name, svcName: bk.svcName, price: bk.price, items: bk.items, date: bk.date, start: bk.start, end: bk.end } });

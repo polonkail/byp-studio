@@ -156,8 +156,20 @@
     if (!hours || !avail || !dur) return [];
     const items = avail.days[date] || [];
     const out = [], o = toMin(hours[0]), c = toMin(hours[1]);
+    // hatóidő: a férfi hajvágás befér egy hajfestés hatóidejébe (ugyanaz a szabály, mint a szerveren)
+    const c0 = cartItems(), fill = c0.every(it => it.v.pauseOk), rel = []; let off = 0;
+    for (const it of c0) { if (it.v.pause) rel.push([off + it.v.pause[0], off + it.v.pause[1]]); off += it.v.dur; }
+    const inside = (soft, lo, hi) => (soft || []).some(([s, e]) => s <= lo && hi <= e);
     for (let m = o; m + dur <= c; m += CFG.salon.stepMinutes) {
-      const busy = items.some(it => { const a = toMin(it.start); return m < a + it.dur && a < m + dur; });
+      const soft = rel.map(([a, b]) => [m + a, m + b]);
+      const busy = items.some(it => {
+        const a = toMin(it.start), a1 = a + it.dur;
+        if (!(m < a1 && a < m + dur)) return false;
+        const lo = Math.max(m, a), hi = Math.min(m + dur, a1);
+        if (fill && !it.fill) return !inside(it.soft, lo, hi);
+        if (it.fill && !fill) return !inside(soft, lo, hi);
+        return true;
+      });
       const past = date === avail.today && m < avail.nowMinutes + CFG.salon.minLeadMinutes;
       out.push({ t: toT(m), free: !busy && !past });
     }

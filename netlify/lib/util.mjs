@@ -52,7 +52,17 @@ export const TIME_RE = /^\d{2}:\d{2}$/;
 
 export const spec = id => SPECIALISTS.find(s => s.id === id);
 export const monthKey = (specId, date) => `${specId}/${date.slice(0, 7)}`;
-export const overlaps = (items, start, dur) => items.some(it => { const a = toMin(it.start); return start < a + it.dur && a < start + dur; });
+// Ütközésvizsgálat. me = { fill, soft }: a „fill” foglalás (pl. férfi hajvágás) beférhet egy másik foglalás
+// „soft” szakaszába (pl. a hajfesték hatóideje alatt); minden más átfedés ütközés.
+const inside = (soft, lo, hi) => (soft || []).some(([s, e]) => s <= lo && hi <= e);
+export const overlaps = (items, start, dur, me = {}) => items.some(it => {
+  const a = toMin(it.start), a1 = a + it.dur, e = start + dur;
+  if (!(start < a1 && a < e)) return false;
+  const lo = Math.max(start, a), hi = Math.min(e, a1);
+  if (me.fill && !it.fill) return !inside(it.soft, lo, hi);
+  if (it.fill && !me.fill) return !inside(me.soft, lo, hi);
+  return true;
+});
 
 // ---- admin auth ----
 const h = s => createHash('sha256').update(String(s)).digest();

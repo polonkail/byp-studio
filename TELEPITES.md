@@ -66,3 +66,10 @@ Mindkét naptárhoz ugyanaz az egy szolgáltatásfiók (és ugyanaz a JSON) hasz
 
 ## Messenger-linkek
 `netlify/lib/config.mjs` → Löki Andrea (facebook.com/ancsii23) és Német-Kotyuga Viktória (facebook.com/viktoria.kotyuga) – a Facebook-profiljukra mutat `messenger:` sora.
+
+## Hatóidő (férfi hajvágás festés közben)
+`netlify/lib/config.mjs`: a `pause: [30, 60]` a festésnél azt jelenti, hogy a kezdéstől számított 30. és 60. perc között hatóidő van, ekkor a `pauseOk: true` jelölésű szolgáltatás (férfi hajvágás) foglalható. Most a Festés és a Tőfestés kapott hatóidőt; más szolgáltatásnál (pl. melír, szőkítés) ugyanígy beállítható.
+
+## Ha a Google Naptár szinkron nem működik
+Admin (bypstudio.hu/feltoltes) → Naptár fül alja → **Kapcsolat ellenőrzése**. Lépésenként megmutatja, mi hiányzik (kulcs, megosztás, jogosultság, Calendar API). Ha minden zöld, a **Meglévő foglalások felírása** gombbal a beállítás előtt érkezett foglalások is bekerülnek a Google Naptárba.
+Alternatíva a JSON helyett: két külön változó, GOOGLE_CLIENT_EMAIL és GOOGLE_PRIVATE_KEY (a JSON client_email és private_key mezője).

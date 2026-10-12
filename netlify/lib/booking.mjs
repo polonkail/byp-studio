@@ -25,24 +25,31 @@ export function resolveItems(s, rawItems, { requireLength = true } = {}) {
       label: [v.catName, v.name, lenName].filter(Boolean).join(' · ') };
   });
   const dur = items.reduce((a, i) => a + i.dur, 0);
+  // hatóidő-szakaszok (a foglalás kezdetéhez képest, percben) és hogy a foglalás befér-e más hatóidejébe
+  const soft = []; let off = 0;
+  for (const it of items) { const v = s.services.find(x => x.id === it.svc); if (v.pause) soft.push([off + v.pause[0], off + v.pause[1]]); off += it.dur; }
+  const fill = items.every(it => s.services.find(x => x.id === it.svc).pauseOk);
   const label = items.map(i => i.label).join(' + ');
   const textOnly = items.filter(i => !i.price || i.priceText.includes('/') || i.priceText.includes('tól') || i.priceText.includes('–'));
   const numeric = items.filter(i => !textOnly.includes(i));
   let price = '';
   if (numeric.length) price = ft(numeric.reduce((a, i) => a + i.price, 0));
   if (textOnly.length) price = [price, ...textOnly.map(i => i.priceText)].filter(Boolean).join(' + ');
-  return { items, dur, label, price, priceSum: numeric.reduce((a, i) => a + i.price, 0) };
+  return { items, dur, label, price, priceSum: numeric.reduce((a, i) => a + i.price, 0), soft, fill };
 }
 
 /** Lefoglalja az időpontot a naptárban, elmenti a foglalást és a névtelen statisztikát. */
 export async function createBooking({ s, date, start, dur, resolved, contact, source, force = false, extraLabel = '' }) {
   const id = newId();
   const startMin = toMin(start);
+  const fill = !!(resolved?.fill && !extraLabel);
+  const soft = (resolved?.soft || []).map(([a, b]) => [startMin + a, startMin + b]).filter(([a, b]) => b <= startMin + dur);
+  const me = { fill, soft };
   await mutateJSON(store('days'), monthKey(s.id, date), doc => {
     doc = doc || {};
     const items = doc[date] || [];
-    if (!force && overlaps(items, startMin, dur)) throw new HttpError(409, 'taken', 'Ezt az időpontot közben valaki lefoglalta. Válassz egy másikat.');
-    items.push({ start, dur, id });
+    if (!force && overlaps(items, startMin, dur, me)) throw new HttpError(409, 'taken', 'Ezt az időpontot közben valaki lefoglalta. Válassz egy másikat.');
+    items.push({ start, dur, id, ...(fill ? { fill } : {}), ...(soft.length ? { soft } : {}) });
     items.sort((x, y) => x.start.localeCompare(y.start));
     doc[date] = items;
     return doc;
@@ -51,7 +58,7 @@ export async function createBooking({ s, date, start, dur, resolved, contact, so
   const booking = {
     id, type: 'booking', source, spec: s.id, specName: s.name,
     items: resolved ? resolved.items.map(({ svc, name, cat, length, price, priceText }) => ({ svc, name, cat, length, price, priceText })) : [],
-    svcName, price: resolved?.price || '', date, start, end: toT(startMin + dur), dur,
+    svcName, price: resolved?.price || '', date, start, end: toT(startMin + dur), dur, ...(fill ? { fill } : {}), ...(soft.length ? { soft } : {}),
     ...contact, createdAt: new Date().toISOString(),
   };
   await store('bookings').setJSON(`${date}/${s.id}/${id}`, booking);
