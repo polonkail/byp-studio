@@ -85,29 +85,32 @@ export const SPECIALISTS = [
     id: 'csilla', name: 'Nagyné Kiss Csilla Krisztina', short: 'Kiss Csilla', role: 'Kéz- és lábápolás', icon: 'footprints', phone: '+36 70 317 5667',
     hours: DEFAULT_HOURS,
     services: [
-      { id: 'kez', name: 'Kézápolás', dur: 45 },
-      { id: 'mukorom', name: 'Műköröm építés', dur: 120 },
-      { id: 'pedikur', name: 'Esztétikai pedikűr', dur: 60 },
+      { id: 'kez', name: 'Kézápolás', dur: 60 },
+      { id: 'mukorom', name: 'Műköröm építés', dur: 150 },
+      { id: 'pedikur', name: 'Esztétikai pedikűr', dur: 90 },
+      { id: 'paraffin', name: 'Paraffinos kéz- vagy lábápolás', dur: 60 },
     ],
   },
   {
-    id: 'andrea', name: 'Löki Andrea', role: 'Szempilla és fülbelövés', icon: 'lash', phone: '+36 30 608 2304',
+    id: 'andrea', name: 'Löki Andrea', role: 'Szempillaépítés, Fülbelövés', icon: 'lash', phone: '+36 30 608 2304',
     // Időpont-egyeztetés Messengeren (online naptár helyett): https://m.me/<felhasználónév>
     booking: 'messenger', messenger: 'https://www.facebook.com/ancsii23',
     hours: DEFAULT_HOURS,
     services: [
-      { id: 'szempilla', name: 'Szempilla-hosszabbítás', dur: 120 },
-      { id: 'fulbelo', name: 'Fülbelövés', dur: 30 },
+      { id: 'szempilla', name: 'Szempillaépítés', dur: 150 },
+      { id: 'lifting', name: 'Szempillalifting', dur: 60 },
+      { id: 'fulbelo', name: 'Fülbelövés', dur: 15 },
     ],
   },
   {
-    id: 'viktoria', name: 'Német-Kotyuga Viktória', short: 'Kotyuga Viktória', role: 'Zselés és műköröm', icon: 'polish', phone: '+36 30 845 4499',
+    id: 'viktoria', name: 'Német-Kotyuga Viktória', short: 'Kotyuga Viktória', role: 'Gél lakk, Műköröm', icon: 'polish', phone: '+36 30 845 4499',
     booking: 'messenger', messenger: 'https://www.facebook.com/viktoria.kotyuga',
     hours: DEFAULT_HOURS,
     services: [
-      { id: 'kez', name: 'Kézápolás', dur: 45 },
-      { id: 'zsele', name: 'Zselés lakkozás', dur: 60 },
-      { id: 'mukorom', name: 'Műköröm építés', dur: 120 },
+      // durText: a honlapon kiírt időtartam (sáv); dur: a naptárban lefoglalt idő percben
+      { id: 'kez', name: 'Kézápolás, manikűr', dur: 60, durText: '30–60 perc' },
+      { id: 'zsele', name: 'Modern gél lakk', dur: 120, durText: '1,5–2 óra' },
+      { id: 'mukorom', name: 'Műköröm saját körömhosszig', dur: 150, durText: '2–2,5 óra' },
     ],
   },
 ];

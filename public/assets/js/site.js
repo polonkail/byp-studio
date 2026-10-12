@@ -17,7 +17,7 @@
   const parse = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
   const ymd = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
   const fmtDay = s => parse(s).toLocaleDateString('hu-HU', { month: 'long', day: 'numeric', weekday: 'long' });
-  const durTxt = m => m >= 60 ? (m % 60 ? `${Math.floor(m / 60)} óra ${m % 60} perc` : `${m / 60} óra`) : `${m} perc`;
+  const durTxt = m => m >= 60 ? (m % 30 ? `${Math.floor(m / 60)} óra ${m % 60} perc` : `${String(m / 60).replace('.', ',')} óra`) : `${m} perc`;
   const api = async (path, opts) => {
     const r = await fetch(path, opts);
     let data = null; try { data = await r.json(); } catch {}
@@ -65,7 +65,7 @@
         s.categories
           ? el('ul', { class: 'svc-list' }, s.categories.flatMap(c => c.groups.map(g => el('li', {}, c.groups.length > 1 ? `${c.name}: ${g.name.toLowerCase()}` : `${c.name} hajvágás`, el('span', {}, `${g.services.length} szolgáltatás`)))),
               el('li', { class: 'svc-more' }, el('a', { class: 'textlink', href: '/arlista/#' + s.id }, 'Teljes árlista', icon('arrow-right'))))
-          : el('ul', { class: 'svc-list' }, s.services.map(v => el('li', {}, v.name, el('span', {}, durTxt(v.dur))))),
+          : el('ul', { class: 'svc-list' }, s.services.map(v => el('li', {}, v.name, el('span', {}, v.durText || durTxt(v.dur))))),
         el('div', { class: 'member-foot' },
           el('a', { class: 'tel', href: 'tel:' + s.phone.replace(/\s/g, '') }, icon('phone'), s.phone),
           el('a', { class: 'textlink', href: '/foglalas/?szakember=' + s.id }, 'Időpontot foglalok', icon('arrow-right')))));
