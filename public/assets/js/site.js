@@ -64,8 +64,9 @@
           el('div', {}, el('h3', {}, s.name), el('p', { class: 'role' }, s.role))),
         s.categories
           ? el('ul', { class: 'svc-list' }, s.categories.flatMap(c => c.groups.map(g => el('li', {}, c.groups.length > 1 ? `${c.name}: ${g.name.toLowerCase()}` : `${c.name} hajvágás`, el('span', {}, `${g.services.length} szolgáltatás`)))),
-              el('li', { class: 'svc-more' }, el('a', { class: 'textlink', href: '/arlista/#' + s.id }, 'Teljes árlista', icon('arrow-right'))))
-          : el('ul', { class: 'svc-list' }, s.services.map(v => el('li', {}, v.name, el('span', {}, v.durText || durTxt(v.dur))))),
+              el('li', { class: 'svc-more' }, el('a', { class: 'textlink', href: '/arlista/' + s.id + '/' }, 'Teljes árlista', icon('arrow-right'))))
+          : el('ul', { class: 'svc-list' }, s.services.map(v => el('li', {}, v.name, el('span', {}, v.durText || durTxt(v.dur)))),
+              s.priceList ? el('li', { class: 'svc-more' }, el('a', { class: 'textlink', href: '/arlista/' + s.id + '/' }, 'Teljes árlista', icon('arrow-right'))) : null),
         el('div', { class: 'member-foot' },
           el('a', { class: 'tel', href: 'tel:' + s.phone.replace(/\s/g, '') }, icon('phone'), s.phone),
           el('a', { class: 'textlink', href: '/foglalas/?szakember=' + s.id }, 'Időpontot foglalok', icon('arrow-right')))));
@@ -195,7 +196,8 @@
         el('ul', { class: 'msg-svcs' }, S.services.map(v => el('li', {}, v.name))),
         el('div', { class: 'msg-actions' },
           el('a', { class: 'btn msg-btn', href: S.messenger, target: '_blank', rel: 'noopener' }, icon('messenger'), `Írok ${dat} Messengeren`),
-          el('a', { class: 'tel', href: 'tel:' + S.phone.replace(/\s/g, '') }, icon('phone'), S.phone)),
+          el('a', { class: 'tel', href: 'tel:' + S.phone.replace(/\s/g, '') }, icon('phone'), S.phone),
+          S.priceList ? el('a', { class: 'textlink', href: '/arlista/' + S.id + '/' }, 'Árlista', icon('arrow-right')) : null),
         /m\.me\//.test(S.messenger) ? '' : el('p', { class: 'muted msg-hint' }, `A gomb ${first} Facebook-profilját nyitja meg: ott az „Üzenet” gombra koppintva tudsz írni neki.`)));
   }
   function renderBooking() {
@@ -238,7 +240,7 @@
       else {
         pv.append(el('p', { class: 'muted small' }, 'Több szolgáltatást is kiválaszthatsz, ezeket egymás után, egy alkalommal kapod meg.'));
         for (const g of C.groups) pv.append(el('div', { class: 'svc-group' }, C.groups.length > 1 || g.name !== C.name ? el('p', { class: 'svc-g' }, g.name) : null, el('div', { class: 'svc-grid' }, g.services.flatMap(row))));
-        pv.append(el('p', { class: 'muted small' }, (S.priceNotes || []).slice(0, 2).join(' '), ' ', el('a', { class: 'textlink', href: '/arlista/#' + S.id }, 'Teljes árlista')));
+        pv.append(el('p', { class: 'muted small' }, (S.priceNotes || []).slice(0, 2).join(' '), ' ', el('a', { class: 'textlink', href: '/arlista/' + S.id + '/' }, 'Teljes árlista')));
       }
     } else if (S) {
       pv.classList.add('cat-mode');

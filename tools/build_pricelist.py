@@ -1,42 +1,44 @@
 # Executed from build_pages.py (shares its helpers: ROOT, write, page_head, header, page_hero, footer, script).
-# Builds /arlista/ as static HTML from netlify/lib/config.mjs, so the price list and the booking use the same data.
+# Builds /arlista/ (szakember-választó) and /arlista/<szakember>/ pages from netlify/lib/config.mjs,
+# so the price lists and the booking use the same data.
 import json, subprocess, html as H
 
 _cfg_path = os.path.abspath(os.path.join(ROOT, 'netlify/lib/config.mjs'))
 cfg = json.loads(subprocess.check_output(['node', '-e', "import('" + _cfg_path + "').then(m=>console.log(JSON.stringify({s:m.SPECIALISTS,l:m.LENGTHS})))"]))
-NB = ' '
+NB = ' '
+E = H.escape
 
 
 def ft(n):
     return f"{n:,}".replace(',', NB) + NB + 'Ft'
 
 
-def table(title, services, wide=False):
-    has_len = any(v.get('prices') for v in services)
-    rows = []
-    for v in services:
-        name = H.escape(v['name'])
-        if has_len and v.get('prices'):
-            cells = ''
-            for L, p in zip(cfg['l'], v['prices']):
-                cls = ' class="na"' if p is None else ''
-                cells += '<td data-label="%s"%s>%s</td>' % (L['name'], cls, '–' if p is None else ft(p))
+def table(title, rows, cols=None, wide=False):
+    """rows: [{name, desc?, prices?[] | price? | priceText?}]; cols: column names when rows have per-column prices."""
+    has_cols = bool(cols) and any(r.get('prices') for r in rows)
+    out = []
+    for r in rows:
+        name = E(r['name']) + ('<small class="pdesc">%s</small>' % E(r['desc']) if r.get('desc') else '')
+        if has_cols and r.get('prices'):
+            cells = ''.join('<td data-label="%s"%s>%s</td>' % (E(c), ' class="na"' if p is None else '', '–' if p is None else ft(p))
+                            for c, p in zip(cols, r['prices']))
         else:
-            txt = v.get('priceText') or (ft(v['price']) if v.get('price') else '')
-            span = ' colspan="3"' if has_len else ''
-            cells = '<td class="span"%s>%s</td>' % (span, H.escape(txt))
-        rows.append('<tr><th scope="row">%s</th>%s</tr>' % (name, cells))
-    if has_len:
-        head = '<thead><tr><th>Szolgáltatás</th>' + ''.join('<th>%s</th>' % L['name'] for L in cfg['l']) + '</tr></thead>'
-    else:
-        head = '<thead><tr><th>Szolgáltatás</th><th>Ár</th></tr></thead>'
-    return '<div class="ptable-box%s"><h3>%s</h3><table class="ptable%s">%s<tbody>%s</tbody></table></div>' % (
-        ' wide' if wide else '', H.escape(title), '' if has_len else ' single', head, ''.join(rows))
+            txt = r.get('priceText') or (ft(r['price']) if r.get('price') else '')
+            span = ' colspan="%d"' % len(cols) if has_cols else ''
+            cells = '<td class="span"%s>%s</td>' % (span, E(txt))
+        out.append('<tr><th scope="row">%s</th>%s</tr>' % (name, cells))
+    head = '<thead><tr><th>Szolgáltatás</th>' + (''.join('<th>%s</th>' % E(c) for c in cols) if has_cols else '<th>Ár</th>') + '</tr></thead>'
+    style = ' style="--cols:%d"' % len(cols) if has_cols else ''
+    return '<div class="ptable-box%s"><h3>%s</h3><table class="ptable%s"%s>%s<tbody>%s</tbody></table></div>' % (
+        ' wide' if wide else '', E(title), '' if has_cols else ' single', style, head, ''.join(out))
 
 
 NOTE_ICONS = ['leaf', 'droplet', 'clock', 'calendar-days']
-blocks, others = [], []
-for sp in cfg['s']:
+LEN_COLS = [L['name'] for L in cfg['l']]
+
+
+def spec_view(sp):
+    """Returns (title, intro, tables_html, notes[])"""
     if sp.get('categories'):
         tbls = []
         for c in sp['categories']:
@@ -47,31 +49,64 @@ for sp in cfg['s']:
                     title, wide = c['name'], False
                 else:
                     title, wide = g['name'], False
-                tbls.append(table(title, g['services'], wide))
-        notes = ''.join('<li><svg class="ico"><use href="#i-%s"/></svg><span>%s</span></li>' % (NOTE_ICONS[i % 4], H.escape(n))
-                        for i, n in enumerate(sp.get('priceNotes', [])))
-        blocks.append('''      <article class="pl-spec rv" id="%s">
-        <div class="pl-spec-head"><div><h2>Fodrászat</h2><p class="role">%s &middot; %s</p></div>
-          <a class="btn" href="/foglalas/?szakember=%s"><svg class="ico"><use href="#i-calendar-days"/></svg>Időpontot foglalok</a></div>
-        <div class="pl-tables">%s</div>
-        <ul class="pl-notes">%s</ul>
-      </article>''' % (sp['id'], H.escape(sp['name']), H.escape(sp['phone']), sp['id'], ''.join(tbls), notes))
-    else:
-        items = ''.join('<li>%s</li>' % H.escape(v['name']) for v in sp['services'])
-        others.append('''<div class="pl-card" id="%s"><p class="role">%s</p><h3>%s</h3>
-          <ul class="svc-list" style="font-size:.95rem">%s</ul>
-          <p class="muted small">Az árakról érdeklődj közvetlenül: <a class="tel" href="tel:%s">%s</a></p>
-          <a class="textlink" href="/foglalas/?szakember=%s">Időpontot foglalok <svg class="ico"><use href="#i-arrow-right"/></svg></a></div>''' % (
-            sp['id'], H.escape(sp['role']), H.escape(sp['name']), items, sp['phone'].replace(' ', ''), H.escape(sp['phone']), sp['id']))
-if others:
-    blocks.append('''      <article class="pl-spec rv">
-        <div class="pl-spec-head"><div><h2>Köröm, pedikűr, szempilla</h2><p class="role">Árak hamarosan</p></div></div>
-        <div class="pl-other">%s</div>
-      </article>''' % ''.join(others))
+                rows = [{'name': v['name'], **{k: v[k] for k in ('prices', 'price', 'priceText') if k in v}} for v in g['services']]
+                tbls.append(table(title, rows, LEN_COLS if any(v.get('prices') for v in g['services']) else None, wide))
+        return 'Fodrászat', 'Női, férfi és gyerek hajvágás, festés, melír, hajhosszabbítás és hajápolás', ''.join(tbls), sp.get('priceNotes', [])
+    pl = sp['priceList']
+    tbls = ''.join(table(g['name'], g['rows'], g.get('cols'), g.get('wide', False)) for g in pl['groups'])
+    return pl['title'], pl.get('intro', ''), tbls, pl.get('notes', [])
 
-pl = '  <section class="sec silk" id="arlista">\n    <div class="wrap pl-wrap">\n' + '\n'.join(blocks) + '\n    </div>\n  </section>\n'
+
+def first_name(sp):
+    return sp['name'].split(' ')[-1]
+
+
+specs = [s for s in cfg['s'] if s.get('categories') or s.get('priceList')]
+
+# ---------- választó (/arlista/) ----------
+cards = []
+for sp in specs:
+    title, intro, _, _ = spec_view(sp)
+    cards.append('''        <a class="pl-pick-card" href="/arlista/%s/">
+          <span class="pl-pick-ico"><svg class="ico"><use href="#i-%s"/></svg></span>
+          <span class="pl-pick-t">%s</span>
+          <span class="pl-pick-n">%s</span>
+          <span class="pl-pick-d">%s</span>
+          <span class="textlink">Árlista megnyitása <svg class="ico"><use href="#i-arrow-right"/></svg></span>
+        </a>''' % (sp['id'], sp['icon'], E(title), E(sp['name']), E(sp['role'])))
+picker = ('  <section class="sec silk" id="arlista">\n    <div class="wrap">\n      <p class="lead pl-pick-lead">Válaszd ki a szakembert, akinek az árlistáját meg szeretnéd nézni.</p>\n'
+          '      <div class="pl-pick">\n' + '\n'.join(cards) + '\n      </div>\n    </div>\n  </section>\n')
 write('arlista/index.html',
-      page_head('Árlista · BYP Studio Hajdúszoboszló', 'A BYP Studio fodrászat árlistája: női, férfi és gyerek hajvágás, festés, melír, balayage, hajhosszabbítás és hajápolás árai, Hajdúszoboszló.')
+      page_head('Árlista · BYP Studio Hajdúszoboszló', 'A BYP Studio árlistái: fodrászat, kéz- és lábápolás, műköröm, gél lakk, pedikűr, szempillaépítés és fülbelövés, Hajdúszoboszló.')
       + header('arlista') + '\n<main id="top">\n'
-      + page_hero('Árlista', 'Áraink <em>átláthatóan</em>', 'Az árak forintban értendő bruttó szalonárak. A végső ár a hajhossztól és a felhasznált anyag mennyiségétől függ.')
-      + pl + '</main>\n\n' + footer + '\n\n' + script + '\n</body>\n</html>\n')
+      + page_hero('Árlista', 'Áraink <em>átláthatóan</em>', 'Négy szakember, négy árlista. Az árak forintban értendő bruttó árak.')
+      + picker + '</main>\n\n' + footer + '\n\n' + script + '\n</body>\n</html>\n')
+
+# ---------- szakemberenkénti oldalak (/arlista/<id>/) ----------
+for sp in specs:
+    title, intro, tbls, notes = spec_view(sp)
+    switch = ''.join('<a class="pl-chip" href="/arlista/%s/"%s>%s</a>' % (o['id'], ' aria-current="page"' if o['id'] == sp['id'] else '', E(o.get('short') or o['name']))
+                     for o in specs)
+    if sp.get('booking') == 'messenger':
+        cta = '<a class="btn" href="%s" target="_blank" rel="noopener"><svg class="ico"><use href="#i-messenger"/></svg>Időpont-egyeztetés</a>' % E(sp['messenger'])
+    else:
+        cta = '<a class="btn" href="/foglalas/?szakember=%s"><svg class="ico"><use href="#i-calendar-days"/></svg>Időpontot foglalok</a>' % sp['id']
+    note_html = ''.join('<li><svg class="ico"><use href="#i-%s"/></svg><span>%s</span></li>' % (NOTE_ICONS[i % 4], E(n)) for i, n in enumerate(notes))
+    body = '''  <section class="sec silk" id="arlista">
+    <div class="wrap pl-wrap">
+      <nav class="pl-switch" aria-label="Árlista kiválasztása"><a class="textlink pl-back" href="/arlista/"><svg class="ico flip"><use href="#i-arrow-right"/></svg>Összes árlista</a><div class="pl-chips">%s</div></nav>
+      <article class="pl-spec rv" id="%s">
+        <div class="pl-spec-head"><div><h2>%s</h2><p class="role">%s &middot; <a class="tel" href="tel:%s">%s</a></p></div>
+          %s</div>
+        <div class="pl-tables">%s</div>
+        %s
+      </article>
+    </div>
+  </section>
+''' % (switch, sp['id'], E(title), E(sp['name']), sp['phone'].replace(' ', ''), E(sp['phone']), cta, tbls,
+       '<ul class="pl-notes">%s</ul>' % note_html if note_html else '')
+    write('arlista/%s/index.html' % sp['id'],
+          page_head('%s árlista · %s · BYP Studio' % (title, sp['name']), E('%s árai a BYP Studióban (Hajdúszoboszló): %s.' % (sp['name'], title.lower())))
+          + header('arlista') + '\n<main id="top">\n'
+          + page_hero('Árlista · ' + E(sp['name']), E(title), E(intro))
+          + body + '</main>\n\n' + footer + '\n\n' + script + '\n</body>\n</html>\n')
