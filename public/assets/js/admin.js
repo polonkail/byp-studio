@@ -376,8 +376,10 @@
         const kind = b.type === 'block' ? 'block' : (b.source === 'telefon' ? 'telefon' : 'online');
         const top = yPos(Math.max(DAY_S, toMinA(b.start))), h = Math.max(22, yPos(Math.min(DAY_E, toMinA(b.end))) - top - 2);
         // hatóidő-sáv (pl. festés közben): ide férfi hajvágás foglalható; az ott lévő foglalás jobb oldalt jelenik meg
-        const pauses = (b.soft || []).map(([a, e]) => el('span', { class: 'cal-pause', style: `top:${yPos(a) - top}px;height:${yPos(e) - yPos(a)}px` }, 'hatóidő'));
-        col.append(el('button', { type: 'button', class: 'cal-ev ' + kind + (b.fill && own.some(o => o !== b && o.soft && toMinA(o.start) < toMinA(b.end) && toMinA(b.start) < toMinA(o.end)) ? ' in-pause' : ''), style: `top:${top}px;height:${h}px`, onclick: e => { e.stopPropagation(); showBooking(b); } },
+        // a hatóidős (pl. festés) foglalás csak a bal fél oszlopot foglalja; a jobb félen a hatóidő-sávra koppintva új foglalás rögzíthető
+        const pauses = [];
+        for (const [a, e] of b.soft || []) col.append(el('div', { class: 'cal-pause', style: `top:${yPos(a)}px;height:${yPos(e) - yPos(a) - 2}px`, title: `Hatóidő ${toTA(a)}–${toTA(e)}: koppints új foglaláshoz` }, el('b', {}, '+ Hatóidő'), el('small', {}, `${toTA(a)}–${toTA(e)}`)));
+        col.append(el('button', { type: 'button', class: 'cal-ev ' + kind + ((b.soft || []).length ? ' has-pause' : '') + (b.fill && own.some(o => o !== b && o.soft && toMinA(o.start) < toMinA(b.end) && toMinA(b.start) < toMinA(o.end)) ? ' in-pause' : ''), style: `top:${top}px;height:${h}px`, onclick: e => { e.stopPropagation(); showBooking(b); } },
           el('b', {}, `${b.start}–${b.end} ${b.type === 'block' ? 'Lezárva' : b.name}`), el('small', {}, b.type === 'block' ? (b.note || '') : b.svcName), ...pauses));
       }
       col.addEventListener('click', e => {
