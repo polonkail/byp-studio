@@ -64,7 +64,7 @@
     if (t === 'statisztika') { renderVisits(); loadStats(); loadVisits(); }
     if (t === 'galeria') loadImages();
     if (t === 'foglalasok') loadBookings();
-    if (t === 'zaras') loadSched();
+    if (t === 'zaras') { loadSched(); loadBlocks(); }
     if (t === 'vendegkonyv') loadGb();
     if (t === 'visszajelzes') loadFb();
     loadCounts();
@@ -161,11 +161,41 @@
     e.preventDefault(); const msg = $('#blMsg');
     msg.className = 'status'; msg.textContent = 'Mentés…';
     try {
-      const r = await api('/api/admin/block', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ spec: $('#blSpec').value, date: $('#blDate').value, from: $('#blFrom').value, to: $('#blTo').value, note: $('#blNote').value }) });
+      const r = await api('/api/admin/block', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ spec: $('#blSpec').value, date: $('#blDate').value, dateTo: $('#blDateTo').value, from: $('#blFrom').value, to: $('#blTo').value, note: $('#blNote').value }) });
       msg.className = 'status'; msg.style.color = 'var(--free)';
-      msg.textContent = r.created.length ? `Lezárva: ${fmtDay($('#blDate').value)}, ${r.created.map(x => `${specName(x.spec)} ${x.start}–${x.end}`).join('; ')}` : 'Ezen a napon amúgy is zárva vagytok.';
+      const days = new Set(r.created.map(x => x.date)).size;
+      msg.textContent = r.created.length ? (days > 1 ? `Lezárva ${days} nap (${fmtDay(r.created[0].date)} – ${fmtDay(r.created[r.created.length - 1].date)}).` : `Lezárva: ${fmtDay($('#blDate').value)}, ${r.created.map(x => `${specName(x.spec)} ${x.start}–${x.end}`).join('; ')}`) : 'Ezekben a napokban amúgy is zárva vagytok.';
+      loadBlocks();
     } catch (err) { msg.style.color = ''; msg.className = 'status err'; msg.textContent = err.message; }
   });
+
+  $('#blDate').addEventListener('change', () => { $('#blDateTo').min = $('#blDate').value; if ($('#blDateTo').value && $('#blDateTo').value < $('#blDate').value) $('#blDateTo').value = ''; });
+  // beállított zárások nevenként, összevont időszakokkal
+  async function loadBlocks() {
+    const box = $('#blList'); if (!box) return;
+    let blocks = [];
+    try { blocks = (await api('/api/admin/blocks')).blocks; } catch (e) { if (e.message !== 'unauthorized') box.replaceChildren(el('p', { class: 'status err' }, e.message)); return; }
+    const short = d => { const [, m, dd] = d.split('-'); return `${m}.${dd}.`; };
+    const isFull = b => { const s = CFG.specialists.find(x => x.id === b.spec); const h = s?.hours[parseD(b.date).getDay()]; return h && b.start === h[0] && b.end === h[1]; };
+    const out = [];
+    for (const s of CFG.specialists) {
+      const mine = blocks.filter(b => b.spec === s.id);
+      // csoportosítás: egyszerre rögzített időszak (group) vagy egyedi nap
+      const groups = [];
+      for (const b of mine) { const g = b.group && groups.find(x => x.key === b.group); if (g) g.items.push(b); else groups.push({ key: b.group || b.id, items: [b] }); }
+      const rows = groups.map(g => {
+        const f = g.items[0], l = g.items[g.items.length - 1], n = g.items.length;
+        const full = g.items.every(isFull);
+        const title = n > 1 ? `${fmtDay(f.date)} – ${fmtDay(l.date)}` : fmtDay(f.date);
+        const det = [n > 1 ? `${n} munkanap` : '', full ? 'egész nap' : `${f.start}–${f.end}`, f.note].filter(Boolean).join(' · ');
+        const btn = el('button', { class: 'mini', type: 'button' }, 'Visszavonás');
+        armed(btn, 'Visszavonás', async () => { await post('/api/admin/unblock', { items: g.items.map(b => ({ date: b.date, spec: b.spec, id: b.id })) }); loadBlocks(); if (!$('#tab-naptar').hidden) loadCal(); });
+        return el('div', { class: 'bl-row' }, el('div', {}, el('b', {}, title), el('small', {}, det)), btn);
+      });
+      out.push(el('div', { class: 'bl-spec' }, el('h3', {}, s.name), rows.length ? el('div', {}, rows) : el('p', { class: 'muted small' }, 'Nincs beállított szabadság vagy zárás.')));
+    }
+    box.replaceChildren(...out);
+  }
 
   /* ---------- counts ---------- */
   async function loadCounts() {
@@ -343,13 +373,29 @@
     try { calBookings = (await api(`/api/admin/bookings?from=${calDate}&to=${calDate}`)).bookings; renderCal(); api(`/api/admin/gbusy?date=${calDate}`).then(r => { calG = r.busy || {}; renderCal(); }).catch(() => {}); }
     catch (e) { if (e.message !== 'unauthorized') alertMsg(e.message); }
   }
+  // „Nap zárása”: az utolsó foglalás (vagy a mostani idő) után a nap hátralévő részét lezárja
+  async function endDay(s, hrs) {
+    const close = toMinA(hrs[1]);
+    let from = toMinA(hrs[0]);
+    if (calDate === ymdL(new Date())) { const n = new Date(); from = Math.max(from, Math.ceil((n.getHours() * 60 + n.getMinutes()) / 15) * 15); }
+    for (const b of calBookings) if (b.spec === s.id && b.date === calDate) from = Math.max(from, toMinA(b.end));
+    if (from >= close) return alertMsg(`${s.name}: erre a napra már nincs szabad, lezárható idő.`);
+    if (!window.confirm(`${s.name} – ${fmtDay(calDate)}\n\nLezárod a napot ${toTA(from)}–${hrs[1]} között? Erre az időre ezután nem lehet foglalni. (A Szabadság, zárás fülön visszavonható.)`)) return;
+    try { await post('/api/admin/block', { spec: s.id, date: calDate, from: toTA(from), to: hrs[1], note: 'Nap vége' }); loadCal(); }
+    catch (e) { alertMsg(e.message); }
+  }
   function renderCal() {
     document.querySelectorAll('#calSpecs .fchip').forEach((b, i) => b.setAttribute('aria-pressed', String((i === 0 ? 'all' : CFG.specialists[i - 1].id) === calSpec)));
     const specs = calSpec === 'all' ? CFG.specialists : CFG.specialists.filter(s => s.id === calSpec);
     const g = $('#calGrid'); g.style.setProperty('--cols', specs.length); g.style.setProperty('--rh', RH + 'px');
     const H = yPos(DAY_E);
     const kids = [el('div', { class: 'cal-colhead', style: 'border-left:0' }, '')];
-    for (const s of specs) kids.push(el('div', { class: 'cal-colhead' }, s.short || s.name));
+    const todayL = ymdL(new Date());
+    for (const s of specs) {
+      const hrs = s.hours[parseD(calDate).getDay()];
+      kids.push(el('div', { class: 'cal-colhead' }, el('span', {}, s.short || s.name),
+        hrs && calDate >= todayL && s.booking !== 'messenger' ? el('button', { class: 'day-end', type: 'button', title: 'A nap hátralévő részére már nem lehet foglalni', onclick: () => endDay(s, hrs) }, 'Nap zárása') : null));
+    }
     const times = el('div', { class: 'cal-times', style: `height:${H}px` });
     for (let m = DAY_S + 60; m < DAY_E; m += 60) times.append(el('span', { style: `top:${yPos(m)}px` }, toTA(m)));
     kids.push(times);
@@ -422,12 +468,12 @@
     const paintDur = () => { if (!state.durTouched) state.dur = autoDur(); durB.textContent = durA(state.dur) + ` (${timeIn.value || '--:--'}–${timeIn.value ? toTA(toMinA(timeIn.value) + state.dur) : '--:--'})`; };
     const renderSvcs = () => {
       const sp = S(); const box = el('div', { class: 'm-svcs' });
-      const groups = sp.categories ? sp.categories.flatMap(c => c.groups.map(g => [c.groups.length > 1 ? `${c.name} – ${g.name}` : c.name, g.services])) : [[sp.role, sp.services]];
+      const groups = sp.categories ? sp.categories.flatMap(c => c.groups.filter(g => g.bookable !== false).map(g => [c.hideName ? g.name : c.groups.length > 1 ? `${c.name} – ${g.name}` : c.name, g.services])) : [[sp.role, sp.services]];
       for (const [gn, list] of groups) {
         box.append(el('p', { class: 'm-g' }, gn));
         for (const v of list) {
           const chk = el('input', { type: 'checkbox', checked: v.id in state.items });
-          const lenSel = v.prices ? el('select', { 'aria-label': 'Hajhossz' }, el('option', { value: '' }, 'Hajhossz (nem kötelező)'), CFG.lengths.map((L, i) => v.prices[i] == null ? null : el('option', { value: L.id, selected: state.items[v.id] === L.id }, `${L.name} · ${ftA(v.prices[i])}`))) : null;
+          const lenSel = v.prices ? el('select', { 'aria-label': sp.lengths ? 'Méret' : 'Hajhossz' }, el('option', { value: '' }, (sp.lengths ? 'Méret' : 'Hajhossz') + ' (nem kötelező)'), (sp.lengths || CFG.lengths).map((L, i) => v.prices[i] == null ? null : el('option', { value: L.id, selected: state.items[v.id] === L.id }, `${L.name} · ${ftA(v.prices[i])}`))) : null;
           if (lenSel) { lenSel.hidden = !(v.id in state.items); lenSel.addEventListener('change', () => { state.items[v.id] = lenSel.value || null; }); }
           chk.addEventListener('change', () => { if (chk.checked) state.items[v.id] = null; else delete state.items[v.id]; if (lenSel) lenSel.hidden = !chk.checked; paintDur(); });
           box.append(el('label', { class: 'm-svc' }, chk, el('span', {}, v.name), el('small', {}, durA(v.dur)), lenSel));
@@ -474,6 +520,16 @@
       for (const s of r.specs || []) rows.push(row(s.ok, `${specName(s.spec)} (${s.env}${s.calendar ? ' = ' + s.calendar : ''})`, s.msg));
       out.replaceChildren(...rows);
       $('#gcalSync').hidden = !(r.specs || []).some(s => s.ok);
+    } catch (e) { out.replaceChildren(row(false, 'Hiba', e.message)); }
+    btn.disabled = false;
+  });
+  $('#mailTest')?.addEventListener('click', async () => {
+    const out = $('#mailOut'), btn = $('#mailTest');
+    btn.disabled = true; out.replaceChildren(el('p', { class: 'muted' }, 'Küldés folyamatban…'));
+    const row = (ok, title, msg) => el('div', { class: 'gc-row ' + (ok === true ? 'ok' : ok === false ? 'bad' : 'na') }, el('b', {}, (ok === true ? '✓ ' : ok === false ? '✗ ' : '– ') + title), el('span', {}, msg));
+    try {
+      const r = await post('/api/admin/mail-test', {});
+      out.replaceChildren(...(r.results ? r.results.map(x => row(x.ok, specName(x.spec), x.msg)) : [row(false, 'Beállítás', r.msg)]));
     } catch (e) { out.replaceChildren(row(false, 'Hiba', e.message)); }
     btn.disabled = false;
   });

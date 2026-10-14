@@ -9,7 +9,7 @@
 <link rel="icon" href="/assets/img/favicon-512.png" type="image/png" sizes="512x512">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <link rel="preload" href="/assets/fonts/cormorant-garamond-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/css/site.css?v=20261021i">
+<link rel="stylesheet" href="/assets/css/site.css?v=20261021k">
 <style>
 body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fixed}
 .adm-head{background:var(--noir);color:#f4ede6;padding-top:env(safe-area-inset-top,0px)}
@@ -91,7 +91,14 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
 .cal-ev.gcal{background:#e3e8f3;border-left:3px solid #4a6aa8;opacity:.9}
 .cal-scroll{overflow-x:auto;border:1px solid rgba(34,28,30,.12);background:#fff}
 .cal-grid{display:grid;grid-template-columns:56px repeat(var(--cols,1),minmax(150px,1fr));min-width:fit-content;position:relative}
-.cal-colhead{position:sticky;top:0;z-index:3;background:var(--noir);color:#f4ede6;padding:10px 8px;font-size:.78rem;letter-spacing:.08em;text-align:center;border-left:1px solid rgba(255,255,255,.08)}
+.cal-colhead{position:sticky;top:0;z-index:3;background:var(--noir);color:#f4ede6;padding:10px 8px;font-size:.78rem;letter-spacing:.08em;text-align:center;border-left:1px solid rgba(255,255,255,.08);display:grid;gap:6px;justify-items:center}
+.day-end{background:transparent;border:1px solid rgba(232,206,160,.55);color:var(--gold-lt);font:inherit;font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;cursor:pointer}
+.day-end:hover{background:rgba(232,206,160,.12)}
+.bl-spec h3{font-size:1.4rem;margin-bottom:8px}
+.bl-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 18px;padding:12px 0;border-bottom:1px solid rgba(34,28,30,.09)}
+.bl-row b{font-weight:500}
+.bl-row small{display:block;color:var(--stone)}
+.row4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))!important}
 .cal-times{position:relative}
 .cal-times span{position:absolute;right:8px;transform:translateY(-50%);font-size:.72rem;color:var(--stone);font-variant-numeric:lining-nums tabular-nums}
 .cal-col{position:relative;border-left:1px solid rgba(34,28,30,.1);cursor:copy;background-image:linear-gradient(rgba(34,28,30,.07) 1px,transparent 1px);background-size:100% var(--rh)}
@@ -260,6 +267,12 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
       <button class="mini" id="gcalSync" type="button" hidden>Meglévő foglalások felírása a Google Naptárba</button></div>
       <div id="gcalOut" style="display:grid;gap:8px"></div>
     </div>
+    <div class="card" id="mailCard" style="margin-top:18px;display:grid;gap:12px">
+      <div><p class="eyebrow">E-mail értesítés</p><h2>Új foglalás értesítő</h2></div>
+      <p class="muted small">Online foglaláskor a szakember e-mailt kap. Itt egy próbalevéllel ellenőrizheted a beállítást.</p>
+      <div class="chip-row"><button class="btn" id="mailTest" type="button" style="min-height:42px;padding:0 1.2em">Próbalevél küldése</button></div>
+      <div id="mailOut" style="display:grid;gap:8px"></div>
+    </div>
   </section>
 
   <!-- statistics -->
@@ -328,16 +341,23 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
     <form class="card" id="blockForm">
       <p class="eyebrow">Szabadság, zárás</p>
       <h2>Időszak lezárása</h2>
-      <p class="muted">A lezárt időszakra a vendégek nem tudnak foglalni. Egész napot is lezárhatsz: hagyd üresen a kezdés és befejezés mezőt.</p>
+      <p class="muted">A lezárt időszakra a vendégek nem tudnak foglalni. Hosszabb szabadsághoz add meg az utolsó napot is (pl. 10.23.-tól 10.30.-ig). Egész napot zársz le, ha a kezdés és befejezés mezőt üresen hagyod; ha kitöltöd, minden érintett napon csak azt az idősávot.</p>
       <div class="row4">
         <label class="field"><span>Kinél?</span><select id="blSpec"></select></label>
-        <label class="field"><span>Nap</span><input id="blDate" type="date" required></label>
+        <label class="field"><span>Első nap (-tól)</span><input id="blDate" type="date" required></label>
+        <label class="field"><span>Utolsó nap (-ig)</span><input id="blDateTo" type="date"></label>
         <label class="field"><span>Kezdés</span><input id="blFrom" type="time" step="1800"></label>
         <label class="field"><span>Befejezés</span><input id="blTo" type="time" step="1800"></label>
       </div>
       <label class="field"><span>Megjegyzés (csak nektek látszik)</span><input id="blNote" maxlength="120" placeholder="pl. szabadság, továbbképzés"></label>
       <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap"><button class="btn" type="submit">Lezárás</button><p class="status" id="blMsg" role="status"></p></div>
     </form>
+    <div class="card" id="blListCard">
+      <p class="eyebrow">Beállított szabadságok, zárások</p>
+      <h2>Nevenként</h2>
+      <p class="muted">A mai és a későbbi lezárások. A „Visszavonás” gombbal törölheted őket, ekkor ezekre az időpontokra újra lehet foglalni.</p>
+      <div id="blList" style="display:grid;gap:22px"></div>
+    </div>
   </section>
 
   <!-- guestbook moderation -->
@@ -365,6 +385,6 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
     <div id="modalBody"></div>
   </div>
 </div>
-<script src="/assets/js/admin.js?v=20261021i" defer></script>
+<script src="/assets/js/admin.js?v=20261021k" defer></script>
 </body>
 </html>

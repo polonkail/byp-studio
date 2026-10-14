@@ -74,7 +74,14 @@ Mindkét naptárhoz ugyanaz az egy szolgáltatásfiók (és ugyanaz a JSON) hasz
 Admin (bypstudio.hu/feltoltes) → Naptár fül alja → **Kapcsolat ellenőrzése**. Lépésenként megmutatja, mi hiányzik (kulcs, megosztás, jogosultság, Calendar API). Ha minden zöld, a **Meglévő foglalások felírása** gombbal a beállítás előtt érkezett foglalások is bekerülnek a Google Naptárba.
 Alternatíva a JSON helyett: két külön változó, GOOGLE_CLIENT_EMAIL és GOOGLE_PRIVATE_KEY (a JSON client_email és private_key mezője).
 
-## E-mail értesítés új online foglalásról
-Netlify → Project configuration → Notifications → Emails and webhooks → Form submission notifications → Add notification → Email notification.
-- `foglalas-petra` űrlap → Petra e-mail-címe, `foglalas-csilla` → Csilla e-mail-címe, `foglalas` (minden foglalás) → pl. a stúdió címe.
-A levél tárgya: „Új foglalás: hó.nap. óra – vendég neve (szolgáltatás)”. A telefonos (admin) rögzítésről nem megy levél.
+## E-mail értesítés új online foglalásról (ingyenes, Gmail-en keresztül)
+1. A küldő Gmail-fiókban (pl. bypstudio11@gmail.com) kapcsold be a kétlépcsős azonosítást: myaccount.google.com → Biztonság.
+2. Ugyanott: myaccount.google.com/apppasswords → név: „BYP weboldal” → Létrehozás → kimásolod a 16 betűs jelszót.
+3. Netlify → Environment variables (hatókör: Functions):
+   - SMTP_USER = bypstudio11@gmail.com
+   - SMTP_PASS = a 16 betűs alkalmazásjelszó
+   - NOTIFY_PETRA = decseipetra01@gmail.com
+   - NOTIFY_CSILLA = csillagtina130618@gmail.com
+   - NOTIFY_ALL = (nem kötelező) ide minden foglalás megy
+4. Új deploy, majd admin → Naptár fül alja → „Próbalevél küldése”.
+Telefonos (admin) rögzítésről nem megy levél.

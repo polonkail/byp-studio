@@ -2,6 +2,11 @@
   "name": "byp-studio",
   "private": true,
   "type": "module",
-  "scripts": { "dev": "netlify dev" },
-  "dependencies": { "@netlify/blobs": "^11.1.3" }
+  "scripts": {
+    "dev": "netlify dev"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^11.1.3",
+    "nodemailer": "^6.10.1"
+  }
 }

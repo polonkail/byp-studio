@@ -34,24 +34,24 @@ def table(title, rows, cols=None, wide=False):
 
 
 NOTE_ICONS = ['leaf', 'droplet', 'clock', 'calendar-days']
-LEN_COLS = [L['name'] for L in cfg['l']]
 
 
 def spec_view(sp):
     """Returns (title, intro, tables_html, notes[])"""
     if sp.get('categories'):
+        cols = [L['name'] for L in (sp.get('lengths') or cfg['l'])]
         tbls = []
         for c in sp['categories']:
             for g in c['groups']:
                 if c['id'] == 'noi' and g['name'].startswith('Vágás'):
                     title, wide = 'Női – vágás, festés, styling', True
-                elif g['name'] == c['name']:
-                    title, wide = c['name'], False
+                elif g['name'] == c['name'] or c.get('hideName'):
+                    title, wide = g['name'], False
                 else:
                     title, wide = g['name'], False
                 rows = [{'name': v['name'], **{k: v[k] for k in ('prices', 'price', 'priceText') if k in v}} for v in g['services']]
-                tbls.append(table(title, rows, LEN_COLS if any(v.get('prices') for v in g['services']) else None, wide))
-        return 'Fodrászat', 'Női, férfi és gyerek hajvágás, festés, melír, hajhosszabbítás és hajápolás', ''.join(tbls), sp.get('priceNotes', [])
+                tbls.append(table(title, rows, cols if any(v.get('prices') for v in g['services']) else None, wide or g.get('wide', False)))
+        return sp.get('plTitle', sp['role']), sp.get('plIntro', ''), ''.join(tbls), sp.get('priceNotes', [])
     pl = sp['priceList']
     tbls = ''.join(table(g['name'], g['rows'], g.get('cols'), g.get('wide', False)) for g in pl['groups'])
     return pl['title'], pl.get('intro', ''), tbls, pl.get('notes', [])

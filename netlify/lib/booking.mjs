@@ -2,6 +2,7 @@
 import { store, mutateJSON, monthKey, newId, toMin, toT, overlaps, HttpError } from './util.mjs';
 import { LENGTHS } from './config.mjs';
 import { gcalPush } from './gcal.mjs';
+import { notifyBooking } from './notify.mjs';
 
 export const ft = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' Ft';
 
@@ -16,10 +17,11 @@ export function resolveItems(s, rawItems, { requireLength = true } = {}) {
     seen.add(v.id);
     let lenName = '', num = v.price || null, txt = v.priceText || (v.price ? ft(v.price) : '');
     if (v.prices) {
-      const li = LENGTHS.findIndex(l => l.id === r.length);
+      const LS = s.lengths || LENGTHS;
+      const li = LS.findIndex(l => l.id === r.length);
       if (li < 0 || v.prices[li] == null) {
-        if (requireLength) throw new HttpError(400, 'bad_length', `Válaszd ki a hajhosszt ennél: ${v.name}.`);
-      } else { lenName = LENGTHS[li].name.toLowerCase(); num = v.prices[li]; txt = ft(num); }
+        if (requireLength) throw new HttpError(400, 'bad_length', `${s.lengths ? 'Válaszd ki a méretet' : 'Válaszd ki a hajhosszt'} ennél: ${v.name}.`);
+      } else { lenName = s.lengths ? LS[li].name : LS[li].name.toLowerCase(); num = v.prices[li]; txt = ft(num); }
     }
     return { svc: v.id, name: v.name, cat: v.catName || null, length: lenName || null, dur: v.dur, price: num, priceText: txt,
       label: [v.catName, v.name, lenName].filter(Boolean).join(' · ') };
@@ -96,7 +98,7 @@ export async function createBooking({ s, date, start, dur, resolved, contact, so
   };
   await store('bookings').setJSON(`${date}/${s.id}/${id}`, booking);
   await addStat(booking);
-  await gcalPush(booking);
+  await Promise.all([gcalPush(booking), source === 'online' ? notifyBooking(booking) : null]);
   return booking;
 }
 

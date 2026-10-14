@@ -17,6 +17,7 @@ export const LENGTHS = [{ id: 'rovid', name: 'Rövid' }, { id: 'felhosszu', name
 export const SPECIALISTS = [
   {
     id: 'petra', name: 'Borbély Petra', role: 'Fodrász', icon: 'scissors', phone: '+36 70 788 8935',
+    plTitle: 'Fodrászat', plIntro: 'Női, férfi és gyerek hajvágás, festés, melír, hajhosszabbítás és hajápolás',
     hours: DEFAULT_HOURS,
     // Fodrász árlista (érvényes: 2026. január 24-től). Árak forintban, bruttó szalonárak.
     // prices: [rövid, félhosszú, hosszú] – null = nem elérhető. price: egy ár. priceText: szöveges ár.
@@ -86,47 +87,47 @@ export const SPECIALISTS = [
   {
     id: 'csilla', name: 'Nagyné Kiss Csilla Krisztina', short: 'Kiss Csilla', role: 'Kéz- és lábápolás', icon: 'footprints', phone: '+36 70 317 5667',
     hours: DEFAULT_HOURS,
-    services: [
-      { id: 'kez', name: 'Kézápolás', dur: 60 },
-      { id: 'mukorom', name: 'Műköröm építés', dur: 150 },
-      { id: 'pedikur', name: 'Esztétikai pedikűr', dur: 90 },
-      { id: 'paraffin', name: 'Paraffinos kéz- vagy lábápolás', dur: 60 },
+    // Árlista és foglalás ugyanebből: prices = [S, M, L] méret szerinti árak (a 'lengths' a méretválasztó).
+    plTitle: 'Kéz- és lábápolás, műköröm', plIntro: 'Kézápoló és műkörömépítő, esztétikai pedikűrös',
+    lengths: [{ id: 's', name: 'S méret' }, { id: 'm', name: 'M méret' }, { id: 'l', name: 'L méret' }],
+    lengthQ: 'Melyik méretet kéred?', lengthMissing: 'Válaszd ki a méretet',
+    priceNotes: ['A feltüntetett árak forintban értendők.', 'Díszítést (ombre, francia, matrica, strasszkő) helyben is kérhetsz.', 'Köszönöm a bizalmat, várlak sok szeretettel!'],
+    categories: [
+      {
+        id: 'csilla', name: 'Kéz- és lábápolás', hideName: true,
+        groups: [
+          { name: 'Gél lakk', services: [
+            { id: 'gel-sima', name: 'Gél lakk – sima alappal', dur: 90, price: 5000 },
+            { id: 'gel-erositett', name: 'Gél lakk – erősített alappal', dur: 90, price: 6000 },
+          ] },
+          { name: 'Műköröm (zselés, tip vagy sablon technikával)', services: [
+            { id: 'mukorom', name: 'Műköröm építés', dur: 150, prices: [7000, 7500, 8000] },
+            { id: 'mukorom-toltes', name: 'Műköröm töltés', dur: 120, prices: [6000, 6500, 7000] },
+          ] },
+          { name: 'Manikűr', services: [
+            { id: 'kez', name: 'Klasszikus manikűr', dur: 60, price: 4000 },
+            { id: 'japan', name: 'Japán manikűr', dur: 60, price: 5000 },
+            { id: 'gepi', name: 'Kombinált / gépi (orosz) manikűr', dur: 60, price: 4000 },
+          ] },
+          { name: 'Esztétikai pedikűr', services: [
+            { id: 'pedikur', name: 'Esztétikai pedikűr', dur: 90, price: 10000 },
+            { id: 'pedikur-gel', name: 'Esztétikai pedikűr + gél lakk', dur: 120, price: 13500 },
+          ] },
+          { name: 'Paraffinos ápolás', services: [
+            { id: 'paraffin', name: 'Paraffinos kéz- vagy lábápolás', dur: 60, price: 6000 },
+          ] },
+          { name: 'Eltávolítás', services: [
+            { id: 'gel-levetel', name: 'Gél lakk eltávolítás', dur: 30, price: 3000 },
+            { id: 'mukorom-levetel', name: 'Műköröm eltávolítás', dur: 60, price: 4000 },
+          ] },
+          { name: 'Díszítés', bookable: false, services: [
+            { id: 'disz-ombre', name: 'Ombre / francia', dur: 2, priceText: '+200 Ft / db' },
+            { id: 'disz-matrica', name: 'Matrica / fólia', dur: 1, priceText: '100 Ft / db' },
+            { id: 'disz-strassz', name: 'Strasszkő', dur: 1, priceText: '300 Ft / ujj' },
+          ] },
+        ],
+      },
     ],
-    // Árlista (csak megjelenítés; a foglalás a fenti 'services' listát használja). cols = oszlopok, prices = oszloponkénti árak.
-    priceList: {
-      title: 'Kéz- és lábápolás, műköröm', intro: 'Kézápoló és műkörömépítő, esztétikai pedikűrös',
-      groups: [
-        { name: 'Gél lakk', rows: [
-          { name: 'Gél lakk – sima alappal', price: 5000 },
-          { name: 'Gél lakk – erősített alappal', price: 6000 },
-        ] },
-        { name: 'Műköröm zselé technikával', cols: ['S méret', 'M méret', 'L méret'], rows: [
-          { name: 'Műköröm építés', prices: [7000, 7500, 8000] },
-          { name: 'Műköröm töltés', prices: [6000, 6500, 7000] },
-        ] },
-        { name: 'Manikűr és lábápolás', rows: [
-          { name: 'Klasszikus manikűr', price: 4000 },
-          { name: 'Japán manikűr', price: 5000 },
-          { name: 'Kombinált / gépi (orosz) manikűr', price: 4000 },
-          { name: 'Paraffinos kézápolás', price: 6000 },
-        ] },
-        { name: 'Pedikűr és paraffin', rows: [
-          { name: 'Esztétikai pedikűr', price: 10000 },
-          { name: 'Esztétikai pedikűr + gél lakk', price: 13500 },
-          { name: 'Paraffinos kéz- és lábápolás', price: 6000 },
-        ] },
-        { name: 'Eltávolítás', rows: [
-          { name: 'Gél lakk eltávolítás', price: 3000 },
-          { name: 'Műköröm eltávolítás', price: 4000 },
-        ] },
-        { name: 'Díszítés', rows: [
-          { name: 'Ombre', priceText: '+200 Ft / db' },
-          { name: 'Matrica / fólia', priceText: '100 Ft / db' },
-          { name: 'Strasszkő', priceText: '300 Ft / ujj' },
-        ] },
-      ],
-      notes: ['A feltüntetett árak forintban értendők.', 'Köszönöm a bizalmat, várlak sok szeretettel!'],
-    },
   },
   {
     id: 'andrea', name: 'Löki Andrea', role: 'Szempillaépítés, Fülbelövés', icon: 'lash', phone: '+36 30 608 2304',
@@ -200,7 +201,8 @@ export const SPECIALISTS = [
 // Ahol kategóriás árlista van, a szolgáltatások lapos listája abból készül (a foglalás ezt használja).
 for (const sp of SPECIALISTS) {
   if (!sp.categories) continue;
-  sp.services = sp.categories.flatMap(c => c.groups.flatMap(g => g.services.map(v => ({ ...v, cat: c.id, catName: c.name, group: g.name }))));
+  // a csak árlistás csoportok (bookable: false) a foglalásban nem szerepelnek
+  sp.services = sp.categories.flatMap(c => c.groups.filter(g => g.bookable !== false).flatMap(g => g.services.map(v => ({ ...v, cat: c.id, catName: c.hideName ? null : c.name, group: g.name }))));
 }
 // Hatóidőbe foglalható szolgáltatások: 30–45 percesek (ha nincs külön megadva)
 for (const sp of SPECIALISTS) for (const v of sp.services) if (v.pauseOk === undefined) v.pauseOk = !v.pause && v.dur >= 30 && v.dur <= 45;

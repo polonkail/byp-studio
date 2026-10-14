@@ -52,7 +52,8 @@
     if (v.prices) { const p = v.prices.filter(x => x != null); const lo = Math.min(...p), hi = Math.max(...p); return lo === hi ? ft(lo) : `${ft(lo)} – ${ft(hi)}`; }
     return '';
   };
-  const lenIdx = id => CFG.lengths.findIndex(l => l.id === id);
+  const LENS = () => (st.spec && specById(st.spec)?.lengths) || CFG.lengths; // hajhossz vagy (Csillánál) méret
+  const lenIdx = id => LENS().findIndex(l => l.id === id);
   const chosenPrice = (v, len) => v.prices ? (len ? ft(v.prices[lenIdx(len)]) : priceSummary(v)) : priceSummary(v);
 
   /* ---------- team ---------- */
@@ -63,7 +64,7 @@
         el('div', { class: 'member-top' }, el('div', { class: 'member-ico' }, icon(s.icon)),
           el('div', {}, el('h3', {}, s.name), el('p', { class: 'role' }, s.role))),
         s.categories
-          ? el('ul', { class: 'svc-list' }, s.categories.flatMap(c => c.groups.map(g => el('li', {}, c.groups.length > 1 ? `${c.name}: ${g.name.toLowerCase()}` : `${c.name} hajvágás`, el('span', {}, `${g.services.length} szolgáltatás`)))),
+          ? el('ul', { class: 'svc-list' }, s.categories.flatMap(c => c.groups.filter(g => g.bookable !== false).map(g => el('li', {}, c.hideName ? g.name.split(' (')[0] : c.groups.length > 1 ? `${c.name}: ${g.name.toLowerCase()}` : `${c.name} hajvágás`, el('span', {}, `${g.services.length} szolgáltatás`)))),
               el('li', { class: 'svc-more' }, el('a', { class: 'textlink', href: '/arlista/' + s.id + '/' }, 'Teljes árlista', icon('arrow-right'))))
           : el('ul', { class: 'svc-list' }, s.services.map(v => el('li', {}, v.name, el('span', {}, v.durText || durTxt(v.dur)))),
               s.priceList ? el('li', { class: 'svc-more' }, el('a', { class: 'textlink', href: '/arlista/' + s.id + '/' }, 'Teljes árlista', icon('arrow-right'))) : null),
@@ -117,7 +118,7 @@
   const cartItems = () => { const S = curSpec(); return st.items.map(it => ({ ...it, v: svcOf(S, it.svc) })).filter(it => it.v); };
   const svcReady = () => { const c = cartItems(); return c.length > 0 && c.every(it => !it.v.prices || it.len); };
   const totalDur = () => cartItems().reduce((a, it) => a + it.v.dur, 0);
-  const itemLabel = it => [it.v.catName, it.v.name, it.len && CFG.lengths[lenIdx(it.len)].name.toLowerCase()].filter(Boolean).join(' · ');
+  const itemLabel = it => [it.v.catName, it.v.name, it.len && (curSpec()?.lengths ? LENS()[lenIdx(it.len)].name : LENS()[lenIdx(it.len)].name.toLowerCase())].filter(Boolean).join(' · ');
   const isTextPrice = v => !v.prices && !v.price;
   function cartPrice() {
     const c = cartItems(); let sum = 0; const extra = [];
@@ -225,21 +226,22 @@
       const out = [el('button', { type: 'button', class: 'svc-row', 'aria-pressed': String(on), onclick: () => toggle(v) },
         el('span', { class: 'svc-n' }, el('span', { class: 'svc-check', 'aria-hidden': 'true' }, on ? icon('check') : null), v.name), el('span', { class: 'svc-p' }, priceSummary(v)), el('span', { class: 'svc-d' }, durTxt(v.dur)))];
       if (on && v.prices) out.push(el('div', { class: 'len-row' },
-        el('p', { class: 'blk-t' }, `Milyen hosszú a hajad? (${v.name})`),
-        el('div', { class: 'len-btns' }, CFG.lengths.map((L, i) => el('button', { type: 'button', class: 'len-btn', disabled: v.prices[i] == null, 'aria-pressed': String(it.len === L.id), onclick: () => setLen(v, L.id) },
+        el('p', { class: 'blk-t' }, `${S.lengthQ || 'Milyen hosszú a hajad?'} (${v.name})`),
+        el('div', { class: 'len-btns' }, LENS().map((L, i) => el('button', { type: 'button', class: 'len-btn', disabled: v.prices[i] == null, 'aria-pressed': String(it.len === L.id), onclick: () => setLen(v, L.id) },
           el('b', {}, L.name), el('span', {}, v.prices[i] == null ? 'nem elérhető' : ft(v.prices[i])))))));
       return out;
     };
     if (S && S.categories) {
       pv.classList.add('cat-mode');
-      pv.append(el('div', { class: 'cat-row', role: 'radiogroup', 'aria-label': 'Kinek szól a szolgáltatás?' },
+      if (S.categories.length === 1) st.cat = S.categories[0].id; // egyetlen csoport: nincs „kinek szól” lépés
+      if (S.categories.length > 1) pv.append(el('div', { class: 'cat-row', role: 'radiogroup', 'aria-label': 'Kinek szól a szolgáltatás?' },
         S.categories.map(c => el('button', { type: 'button', class: 'cat-btn', role: 'radio', 'aria-checked': String(st.cat === c.id), onclick: () => { st.cat = c.id; renderBooking(); } },
           el('b', {}, c.name), el('small', {}, c.groups.reduce((a, g) => a + g.services.length, 0) + ' szolgáltatás')))));
       const C = st.cat && S.categories.find(c => c.id === st.cat);
       if (!C) pv.append(el('p', { class: 'muted' }, 'Válaszd ki, kinek szól a szolgáltatás: női, férfi vagy gyerek.'));
       else {
         pv.append(el('p', { class: 'muted small' }, 'Több szolgáltatást is kiválaszthatsz, ezeket egymás után, egy alkalommal kapod meg.'));
-        for (const g of C.groups) pv.append(el('div', { class: 'svc-group' }, C.groups.length > 1 || g.name !== C.name ? el('p', { class: 'svc-g' }, g.name) : null, el('div', { class: 'svc-grid' }, g.services.flatMap(row))));
+        for (const g of C.groups.filter(g => g.bookable !== false)) pv.append(el('div', { class: 'svc-group' }, C.groups.length > 1 || g.name !== C.name ? el('p', { class: 'svc-g' }, g.name) : null, el('div', { class: 'svc-grid' }, g.services.flatMap(row))));
         pv.append(el('p', { class: 'muted small' }, (S.priceNotes || []).slice(0, 2).join(' '), ' ', el('a', { class: 'textlink', href: '/arlista/' + S.id + '/' }, 'Teljes árlista')));
       }
     } else if (S) {
@@ -256,7 +258,7 @@
         el('ul', {}, c.map(it => el('li', {}, el('span', {}, itemLabel(it)), el('span', { class: 'cart-p' }, chosenPrice(it.v, it.len)),
           el('button', { type: 'button', class: 'cart-x', 'aria-label': 'Eltávolítás: ' + it.v.name, onclick: () => { st.items = st.items.filter(x => x.svc !== it.svc); st.time = null; renderBooking(); renderCal(); } }, icon('x'))))),
         el('div', { class: 'cart-total' }, el('span', {}, `Időtartam: ${durTxt(totalDur())}`), el('b', {}, cartPrice())),
-        missing.length ? el('p', { class: 'status err' }, 'Add meg a hajhosszt: ' + missing.map(m => m.v.name).join(', ') + '.') : null));
+        missing.length ? el('p', { class: 'status err' }, (S.lengthMissing || 'Add meg a hajhosszt') + ': ' + missing.map(m => m.v.name).join(', ') + '.') : null));
     }
     $('#blkCal').hidden = !(S && svcReady());
     renderForm(); stepInfo();
@@ -329,10 +331,10 @@
     try {
       const r = await api('/api/book', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
       // e-mail értesítés a stúdiónak (Netlify Forms) – ha nincs bekapcsolva, csendben kihagyjuk
-      // e-mail értesítés (Netlify Forms): egy közös és egy szakemberenkénti űrlap, hogy mindenki a saját foglalásairól kapjon levelet
+      // a foglalás a Netlify Forms listájában is megjelenik (az e-mail értesítést a szerver küldi, lásd netlify/lib/notify.mjs)
       const nf = { szakember: r.booking.specName, szolgaltatas: r.booking.svcName + (r.booking.price ? ' · ' + r.booking.price : ''), datum: r.booking.date, idopont: `${r.booking.start}–${r.booking.end}`, nev: name, telefon: phone, email: payload.email, megjegyzes: payload.note,
         subject: `Új foglalás: ${r.booking.date.slice(5).replace('-', '.')}. ${r.booking.start} – ${name} (${(r.booking.items || []).map(i => i.name.split(' (')[0]).join(', ')})` };
-      for (const fn of ['foglalas', 'foglalas-' + payload.spec])
+      for (const fn of ['foglalas'])
         fetch('/', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ 'form-name': fn, ...nf }).toString() }).catch(() => {});
       showDone(r.booking);
     } catch (err) {
