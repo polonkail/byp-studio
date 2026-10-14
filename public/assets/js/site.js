@@ -329,7 +329,11 @@
     try {
       const r = await api('/api/book', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
       // e-mail értesítés a stúdiónak (Netlify Forms) – ha nincs bekapcsolva, csendben kihagyjuk
-      fetch('/', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ 'form-name': 'foglalas', szakember: r.booking.specName, szolgaltatas: r.booking.svcName + (r.booking.price ? ' · ' + r.booking.price : ''), datum: r.booking.date, idopont: `${r.booking.start}–${r.booking.end}`, nev: name, telefon: phone, email: payload.email, megjegyzes: payload.note }).toString() }).catch(() => {});
+      // e-mail értesítés (Netlify Forms): egy közös és egy szakemberenkénti űrlap, hogy mindenki a saját foglalásairól kapjon levelet
+      const nf = { szakember: r.booking.specName, szolgaltatas: r.booking.svcName + (r.booking.price ? ' · ' + r.booking.price : ''), datum: r.booking.date, idopont: `${r.booking.start}–${r.booking.end}`, nev: name, telefon: phone, email: payload.email, megjegyzes: payload.note,
+        subject: `Új foglalás: ${r.booking.date.slice(5).replace('-', '.')}. ${r.booking.start} – ${name} (${(r.booking.items || []).map(i => i.name.split(' (')[0]).join(', ')})` };
+      for (const fn of ['foglalas', 'foglalas-' + payload.spec])
+        fetch('/', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ 'form-name': fn, ...nf }).toString() }).catch(() => {});
       showDone(r.booking);
     } catch (err) {
       btn.disabled = false; status.className = 'status err'; status.textContent = err.message;

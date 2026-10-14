@@ -73,3 +73,8 @@ Mindkét naptárhoz ugyanaz az egy szolgáltatásfiók (és ugyanaz a JSON) hasz
 ## Ha a Google Naptár szinkron nem működik
 Admin (bypstudio.hu/feltoltes) → Naptár fül alja → **Kapcsolat ellenőrzése**. Lépésenként megmutatja, mi hiányzik (kulcs, megosztás, jogosultság, Calendar API). Ha minden zöld, a **Meglévő foglalások felírása** gombbal a beállítás előtt érkezett foglalások is bekerülnek a Google Naptárba.
 Alternatíva a JSON helyett: két külön változó, GOOGLE_CLIENT_EMAIL és GOOGLE_PRIVATE_KEY (a JSON client_email és private_key mezője).
+
+## E-mail értesítés új online foglalásról
+Netlify → Project configuration → Notifications → Emails and webhooks → Form submission notifications → Add notification → Email notification.
+- `foglalas-petra` űrlap → Petra e-mail-címe, `foglalas-csilla` → Csilla e-mail-címe, `foglalas` (minden foglalás) → pl. a stúdió címe.
+A levél tárgya: „Új foglalás: hó.nap. óra – vendég neve (szolgáltatás)”. A telefonos (admin) rögzítésről nem megy levél.
