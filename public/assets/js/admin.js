@@ -11,7 +11,7 @@
     return e;
   };
   const KEY = 'byp-admin-pw';
-  const TABS = ['naptar', 'statisztika', 'galeria', 'foglalasok', 'zaras', 'vendegkonyv', 'visszajelzes'];
+  const TABS = ['naptar', 'telefonos', 'statisztika', 'galeria', 'foglalasok', 'zaras', 'vendegkonyv', 'visszajelzes'];
   let PW = ''; try { PW = sessionStorage.getItem(KEY) || ''; } catch {}
   let CFG = null, images = [], bookings = [], bkFilter = 'all';
 
@@ -55,12 +55,19 @@
     showTab(location.hash.slice(1) || 'naptar');
     loadVisits();
   }
+  // a beágyazott telefonos foglalás magassága és visszajelzése
+  addEventListener('message', e => {
+    if (e.origin !== location.origin || !e.data) return;
+    if (e.data.type === 'byp-height') $('#phoneFrame').style.height = Math.max(600, e.data.h + 20) + 'px';
+    if (e.data.type === 'byp-booked') { calDate = e.data.date || calDate; loadCounts(); }
+  });
   function showTab(t) {
     if (!TABS.includes(t)) t = 'naptar';
     document.querySelectorAll('.tab[data-tab]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
     TABS.forEach(x => $('#tab-' + x).hidden = x !== t);
     history.replaceState(null, '', '#' + t);
     if (t === 'naptar') loadCal();
+    if (t === 'telefonos') { const f = $('#phoneFrame'); if (!f.src) f.src = '/foglalas/?admin=1'; }
     if (t === 'statisztika') { renderVisits(); loadStats(); loadVisits(); }
     if (t === 'galeria') loadImages();
     if (t === 'foglalasok') loadBookings();
@@ -473,7 +480,7 @@
         box.append(el('p', { class: 'm-g' }, gn));
         for (const v of list) {
           const chk = el('input', { type: 'checkbox', checked: v.id in state.items });
-          const lenSel = v.prices ? el('select', { 'aria-label': sp.lengths ? 'Méret' : 'Hajhossz' }, el('option', { value: '' }, (sp.lengths ? 'Méret' : 'Hajhossz') + ' (nem kötelező)'), (sp.lengths || CFG.lengths).map((L, i) => v.prices[i] == null ? null : el('option', { value: L.id, selected: state.items[v.id] === L.id }, `${L.name} · ${ftA(v.prices[i])}`))) : null;
+          const lenSel = v.prices ? el('select', { 'aria-label': sp.lengths ? 'Méret' : 'Hajhossz' }, el('option', { value: '' }, (sp.lengths ? 'Válassz méretet' : 'Válassz hajhosszt')), (sp.lengths || CFG.lengths).map((L, i) => v.prices[i] == null ? null : el('option', { value: L.id, selected: state.items[v.id] === L.id }, `${L.name} · ${ftA(v.prices[i])}`))) : null;
           if (lenSel) { lenSel.hidden = !(v.id in state.items); lenSel.addEventListener('change', () => { state.items[v.id] = lenSel.value || null; }); }
           chk.addEventListener('change', () => { if (chk.checked) state.items[v.id] = null; else delete state.items[v.id]; if (lenSel) lenSel.hidden = !chk.checked; paintDur(); });
           box.append(el('label', { class: 'm-svc' }, chk, el('span', {}, v.name), el('small', {}, durA(v.dur)), lenSel));
@@ -488,6 +495,8 @@
       msg.className = 'status err';
       if (nameIn.value.trim().length < 2) { msg.textContent = 'Add meg a vendég nevét.'; nameIn.focus(); return; }
       if (!Object.keys(state.items).length && !extra.value.trim()) { msg.textContent = 'Jelölj be legalább egy szolgáltatást, vagy írd be, mire jön a vendég.'; return; }
+      const noLen = Object.entries(state.items).filter(([id, len]) => S().services.find(v => v.id === id)?.prices && !len);
+      if (noLen.length) { msg.textContent = `${S().lengths ? 'Válaszd ki a méretet' : 'Válaszd ki a hajhosszt'} (az ár miatt): ${noLen.map(([id]) => S().services.find(v => v.id === id).name).join(', ')}.`; return; }
       msg.className = 'status'; msg.textContent = 'Mentés…';
       try {
         await post('/api/admin/manual-book', { spec: state.spec, date: dateIn.value, start: timeIn.value, dur: state.dur, force,

@@ -25,6 +25,9 @@
     return data;
   };
   $('#year').textContent = new Date().getFullYear();
+  // Telefonos rögzítés az admin felületről: /foglalas/?admin=1 (az admin oldal beágyazva nyitja meg)
+  const ADMIN = new URLSearchParams(location.search).get('admin') === '1';
+  let APW = ''; if (ADMIN) { try { APW = sessionStorage.getItem('byp-admin-pw') || ''; } catch {} document.documentElement.classList.add('admin-embed'); }
 
   /* ---------- header ---------- */
   const head = $('#head');
@@ -172,7 +175,7 @@
         if (it.fill && !fill) return !inside(soft, lo, hi);
         return true;
       });
-      const past = date === avail.today && m < avail.nowMinutes + CFG.salon.minLeadMinutes;
+      const past = date === avail.today && m < avail.nowMinutes + (ADMIN ? 0 : CFG.salon.minLeadMinutes);
       out.push({ t: toT(m), free: !busy && !past });
     }
     return out;
@@ -205,13 +208,13 @@
     const ps = $('#pickSpec'); ps.replaceChildren();
     for (const s of CFG.specialists) ps.append(el('button', { type: 'button', class: 'opt', 'aria-pressed': String(st.spec === s.id), onclick: () => selectSpec(s.id) }, icon(s.icon), el('b', {}, s.short || s.name), el('small', {}, s.role)));
     const S = curSpec();
-    if (S && S.booking === 'messenger') {
+    if (S && S.booking === 'messenger' && !ADMIN) {
       $('#helpBox')?.replaceChildren(messengerBox(S));
       $('#blkSvc').hidden = true; $('#blkCal').hidden = true; $('#blkForm').hidden = true;
       document.querySelectorAll('#stepList li').forEach((li, i) => { li.classList.toggle('done', i === 0); li.classList.toggle('cur', i === 1); li.lastElementChild.textContent = i === 0 ? (S.short || S.name) : i === 1 ? 'Messenger' : ''; });
       return;
     }
-    $('#helpBox')?.replaceChildren(helpBox(S));
+    $('#helpBox')?.replaceChildren(ADMIN ? '' : helpBox(S));
     $('#blkSvc').hidden = !S;
     const pv = $('#pickSvc'); pv.replaceChildren();
     const toCal = () => setTimeout(() => $('#blkCal').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 30);
@@ -324,10 +327,23 @@
     const name = $('#fName').value.trim(), phone = $('#fPhone').value.trim();
     status.className = 'status err';
     if (name.length < 2) { status.textContent = 'Add meg a neved.'; $('#fName').focus(); return; }
-    if (phone.replace(/\D/g, '').length < 8) { status.textContent = 'Adj meg egy érvényes telefonszámot.'; $('#fPhone').focus(); return; }
-    if (!$('#fConsent').checked) { status.textContent = 'A foglaláshoz fogadd el az adatkezelést.'; return; }
+    if (!ADMIN && phone.replace(/\D/g, '').length < 8) { status.textContent = 'Adj meg egy érvényes telefonszámot.'; $('#fPhone').focus(); return; }
+    if (!ADMIN && !$('#fConsent').checked) { status.textContent = 'A foglaláshoz fogadd el az adatkezelést.'; return; }
     btn.disabled = true; status.className = 'status'; status.textContent = 'Foglalás folyamatban…';
-    const payload = { spec: st.spec, items: st.items.map(x => ({ svc: x.svc, length: x.len })), date: st.date, start: st.time, name, phone, email: $('#fEmail').value.trim(), note: $('#fNote').value.trim(), website: $('#fWeb').value, consent: true };
+    const payload = { spec: st.spec, items: st.items.map(x => ({ svc: x.svc, length: x.len })), date: st.date, start: st.time, name, phone, email: ($('#fEmail')?.value || '').trim(), note: $('#fNote').value.trim(), website: $('#fWeb').value, consent: true };
+    if (ADMIN) {
+      try {
+        const r = await api('/api/admin/manual-book', { method: 'POST', headers: { 'content-type': 'application/json', 'x-admin-password': APW },
+          body: JSON.stringify({ spec: st.spec, date: st.date, start: st.time, items: payload.items, name, phone, note: payload.note }) });
+        try { parent.postMessage({ type: 'byp-booked', date: r.booking.date }, location.origin); } catch {}
+        showDone(r.booking);
+      } catch (err) {
+        btn.disabled = false; status.className = 'status err';
+        status.textContent = /jelszó|unauthorized/i.test(err.message) || err.code === 'unauthorized' ? 'Lejárt a belépés. Frissítsd az admin oldalt, és lépj be újra.' : err.message;
+        if (err.code === 'taken' || err.code === 'conflict') { st.time = null; loadAvail(); renderForm(); stepInfo(); }
+      }
+      return;
+    }
     try {
       const r = await api('/api/book', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
       // e-mail értesítés a stúdiónak (Netlify Forms) – ha nincs bekapcsolva, csendben kihagyjuk
@@ -346,6 +362,16 @@
   function showDone(b) {
     const S = specById(st.spec);
     document.querySelectorAll('#stepList li').forEach(li => { li.classList.add('done'); li.classList.remove('cur'); });
+    if (ADMIN) {
+      $('#panel').replaceChildren(el('div', { class: 'done-box' },
+        el('div', { class: 'ring' }, icon('check')),
+        el('p', { class: 'eyebrow' }, 'Telefonos foglalás rögzítve'),
+        el('h3', {}, b.name),
+        el('p', { class: 'lead' }, `${fmtDay(b.date)}, ${b.start}–${b.end}`),
+        el('p', { class: 'muted' }, `${b.svcName} · ${b.specName}`), b.price ? el('p', { class: 'price' }, 'Ár: ' + b.price) : null,
+        el('button', { class: 'btn', type: 'button', onclick: () => location.reload() }, 'Újabb telefonos foglalás')));
+      return;
+    }
     $('#panel').replaceChildren(el('div', { class: 'done-box' },
       el('div', { class: 'ring' }, icon('check')),
       el('p', { class: 'eyebrow' }, 'Sikeres foglalás'),
@@ -463,7 +489,7 @@
   });
 
   /* ---------- látogatásszámláló (névtelen) ---------- */
-  if (!navigator.webdriver) fetch('/api/hit', { method: 'POST', keepalive: true }).catch(() => {});
+  if (!navigator.webdriver && !ADMIN) fetch('/api/hit', { method: 'POST', keepalive: true }).catch(() => {});
 
   /* ---------- start ---------- */
   (async () => {
@@ -472,6 +498,19 @@
     const has = id => !!$(id);
     if (has('#team')) renderTeam();
     if (has('#panel')) {
+      if (ADMIN) {
+        // a vendégnek szóló szövegek helyett a rögzítéshez illő feliratok
+        const L = (sel, t) => { const n = $(sel); if (n) n.textContent = t; };
+        L('#stepList li[data-s="4"] b', 'Vendég'); L('.steps h3', 'Telefonos foglalás');
+        L('#panel .blk:first-child .blk-t', '1 · Melyik szakemberhez?'); L('#blkSvc .blk-t', '2 · Milyen szolgáltatást kér a vendég?');
+        L('#blkForm .blk-t', '4 · A vendég adatai');
+        $('#fPhone').required = false; $('#fPhone').closest('.field').firstElementChild.textContent = 'Telefonszám (nem kötelező)';
+        $('#fEmail')?.closest('.field')?.remove(); $('#fConsent')?.closest('label')?.remove();
+        $('#fSubmit').lastChild.textContent = 'Foglalás rögzítése';
+        // magasság jelzése a befoglaló admin oldalnak
+        const send = () => { try { parent.postMessage({ type: 'byp-height', h: Math.ceil(($('#foglalas') || document.body).getBoundingClientRect().bottom + scrollY) }, location.origin); } catch {} };
+        new ResizeObserver(send).observe(document.body); send();
+      }
       renderBooking();
       const pre = new URLSearchParams(location.search).get('szakember');
       if (pre && specById(pre)) { selectSpec(pre); const k = new URLSearchParams(location.search).get('kat'); if (k && specById(pre).categories?.some(c => c.id === k)) { st.cat = k; renderBooking(); } }

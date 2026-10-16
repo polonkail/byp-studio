@@ -479,3 +479,9 @@ p{margin:0}
 .js .rv{opacity:0;transform:translateY(22px);transition:opacity 1s var(--ease),transform 1s var(--ease)}
 .js .rv.in{opacity:1;transform:none}
 @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} .js .rv{opacity:1;transform:none;transition:none} *{transition:none!important} }
+
+/* Telefonos rögzítés az admin felületen (beágyazva) */
+.admin-embed .site-head,.admin-embed .site-foot,.admin-embed .page-hero,.admin-embed .steps .help,.admin-embed #helpBox:empty{display:none!important}
+.admin-embed body{padding-top:0}
+.admin-embed #foglalas{padding-top:8px!important;padding-bottom:24px!important}
+.admin-embed .rv{opacity:1!important;transform:none!important}

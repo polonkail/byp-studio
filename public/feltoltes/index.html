@@ -9,7 +9,7 @@
 <link rel="icon" href="/assets/img/favicon-512.png" type="image/png" sizes="512x512">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <link rel="preload" href="/assets/fonts/cormorant-garamond-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/css/site.css?v=20261021k">
+<link rel="stylesheet" href="/assets/css/site.css?v=20261021l">
 <style>
 body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fixed}
 .adm-head{background:var(--noir);color:#f4ede6;padding-top:env(safe-area-inset-top,0px)}
@@ -220,6 +220,7 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
     <a class="logo" href="/" aria-label="BYP Studio, főoldal"><img class="logo-img" src="/assets/img/logo-monogram.png" alt="BYP Studio" width="74" height="62" style="height:62px;width:auto"><span class="logo-word"><small>Kezelőfelület</small></span></a>
     <nav class="tabs" id="tabs" role="tablist" hidden>
       <button class="tab" role="tab" data-tab="naptar" aria-selected="true">Naptár</button>
+      <button class="tab" role="tab" data-tab="telefonos" aria-selected="false">Telefonos foglalás</button>
       <button class="tab" role="tab" data-tab="statisztika" aria-selected="false">Statisztika</button>
       <button class="tab" role="tab" data-tab="galeria" aria-selected="false">Galéria</button>
       <button class="tab" role="tab" data-tab="foglalasok" aria-selected="false">Foglalások</button>
@@ -243,6 +244,12 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
   <p class="visit-strip" id="visitStrip" hidden></p>
 
   <!-- calendar (phone bookings) -->
+  <section id="tab-telefonos" hidden>
+    <div class="card" style="padding:clamp(10px,2vw,22px)">
+      <iframe id="phoneFrame" title="Telefonos foglalás rögzítése" style="width:100%;border:0;display:block;min-height:900px" loading="lazy"></iframe>
+    </div>
+  </section>
+
   <section id="tab-naptar" hidden>
     <div class="card cal-card">
       <div class="cal-top">
@@ -385,6 +392,6 @@ body{background:var(--pearl) url("/assets/img/silk-pearl.webp") center/cover fix
     <div id="modalBody"></div>
   </div>
 </div>
-<script src="/assets/js/admin.js?v=20261021k" defer></script>
+<script src="/assets/js/admin.js?v=20261021l" defer></script>
 </body>
 </html>
