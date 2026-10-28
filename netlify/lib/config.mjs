@@ -111,7 +111,7 @@ export const SPECIALISTS = [
           ] },
           { name: 'Esztétikai pedikűr', services: [
             { id: 'pedikur', name: 'Esztétikai pedikűr', dur: 90, price: 10000 },
-            { id: 'pedikur-gel', name: 'Esztétikai pedikűr + gél lakk', dur: 120, price: 13500 },
+            { id: 'pedikur-gel', name: 'Esztétikai pedikűr + gél lakk', dur: 120, price: 16000 },
           ] },
           { name: 'Paraffinos ápolás', services: [
             { id: 'paraffin', name: 'Paraffinos kéz- vagy lábápolás', dur: 60, price: 6000 },
