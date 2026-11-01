@@ -67,7 +67,7 @@
         el('div', { class: 'member-top' }, el('div', { class: 'member-ico' }, icon(s.icon)),
           el('div', {}, el('h3', {}, s.name), el('p', { class: 'role' }, s.role))),
         s.categories
-          ? el('ul', { class: 'svc-list' }, s.categories.flatMap(c => c.groups.filter(g => g.bookable !== false).map(g => el('li', {}, c.hideName ? g.name.split(' (')[0] : c.groups.length > 1 ? `${c.name}: ${g.name.toLowerCase()}` : `${c.name} hajvágás`, el('span', {}, `${g.services.length} szolgáltatás`)))),
+          ? el('ul', { class: 'svc-list' }, s.categories.flatMap(c => c.groups.filter(g => g.bookable !== false).map(g => el('li', {}, c.hideName ? g.name.split(' (')[0] : c.groups.length > 1 ? `${c.name}: ${g.name.toLowerCase()}` : c.label || (c.durText ? c.name : `${c.name} hajvágás`), el('span', {}, c.durText || `${g.services.length} szolgáltatás`)))),
               el('li', { class: 'svc-more' }, el('a', { class: 'textlink', href: '/arlista/' + s.id + '/' }, 'Teljes árlista', icon('arrow-right'))))
           : el('ul', { class: 'svc-list' }, s.services.map(v => el('li', {}, v.name, el('span', {}, v.durText || durTxt(v.dur)))),
               s.priceList ? el('li', { class: 'svc-more' }, el('a', { class: 'textlink', href: '/arlista/' + s.id + '/' }, 'Teljes árlista', icon('arrow-right'))) : null),
@@ -227,7 +227,7 @@
     const row = v => {
       const it = st.items.find(x => x.svc === v.id), on = !!it;
       const out = [el('button', { type: 'button', class: 'svc-row', 'aria-pressed': String(on), onclick: () => toggle(v) },
-        el('span', { class: 'svc-n' }, el('span', { class: 'svc-check', 'aria-hidden': 'true' }, on ? icon('check') : null), v.name), el('span', { class: 'svc-p' }, priceSummary(v)), el('span', { class: 'svc-d' }, durTxt(v.dur)))];
+        el('span', { class: 'svc-n' }, el('span', { class: 'svc-check', 'aria-hidden': 'true' }, on ? icon('check') : null), v.name), el('span', { class: 'svc-p' }, priceSummary(v)), el('span', { class: 'svc-d' }, v.durText || durTxt(v.dur)), v.desc ? el('span', { class: 'svc-desc' }, v.desc) : null)];
       if (on && v.prices) out.push(el('div', { class: 'len-row' },
         el('p', { class: 'blk-t' }, `${S.lengthQ || 'Milyen hosszú a hajad?'} (${v.name})`),
         el('div', { class: 'len-btns' }, LENS().map((L, i) => el('button', { type: 'button', class: 'len-btn', disabled: v.prices[i] == null, 'aria-pressed': String(it.len === L.id), onclick: () => setLen(v, L.id) },
@@ -241,7 +241,7 @@
         S.categories.map(c => el('button', { type: 'button', class: 'cat-btn', role: 'radio', 'aria-checked': String(st.cat === c.id), onclick: () => { st.cat = c.id; renderBooking(); } },
           el('b', {}, c.name), el('small', {}, c.groups.reduce((a, g) => a + g.services.length, 0) + ' szolgáltatás')))));
       const C = st.cat && S.categories.find(c => c.id === st.cat);
-      if (!C) pv.append(el('p', { class: 'muted' }, 'Válaszd ki, kinek szól a szolgáltatás: női, férfi vagy gyerek.'));
+      if (!C) pv.append(el('p', { class: 'muted' }, S.catQ || 'Válaszd ki, kinek szól a szolgáltatás: női, férfi vagy gyerek.'));
       else {
         pv.append(el('p', { class: 'muted small' }, 'Több szolgáltatást is kiválaszthatsz, ezeket egymás után, egy alkalommal kapod meg.'));
         for (const g of C.groups.filter(g => g.bookable !== false)) pv.append(el('div', { class: 'svc-group' }, C.groups.length > 1 || g.name !== C.name ? el('p', { class: 'svc-g' }, g.name) : null, el('div', { class: 'svc-grid' }, g.services.flatMap(row))));

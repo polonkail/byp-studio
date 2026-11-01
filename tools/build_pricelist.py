@@ -38,7 +38,7 @@ NOTE_ICONS = ['leaf', 'droplet', 'clock', 'calendar-days']
 
 def spec_view(sp):
     """Returns (title, intro, tables_html, notes[])"""
-    if sp.get('categories'):
+    if sp.get('categories') and not sp.get('priceList'):
         cols = [L['name'] for L in (sp.get('lengths') or cfg['l'])]
         tbls = []
         for c in sp['categories']:

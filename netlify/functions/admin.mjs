@@ -230,7 +230,7 @@ export default handle(async req => {
     const { mailEnabled, recipientsFor, sendMail } = await import('../lib/notify.mjs');
     if (!mailEnabled()) return json({ ok: false, msg: 'Nincs beállítva az SMTP_USER és/vagy az SMTP_PASS környezeti változó (vagy beállítás után nem volt új deploy).' });
     const out = [];
-    for (const id of ['petra', 'csilla']) {
+    for (const id of ['petra', 'csilla', 'viktoria']) {
       const to = recipientsFor(id);
       if (!to.length) { out.push({ spec: id, ok: null, msg: `Nincs címzett (NOTIFY_${id.toUpperCase()}).` }); continue; }
       try { await sendMail({ to: to.join(','), subject: 'BYP Stúdió – próba értesítés', text: 'Ez egy próbalevél. Ha megkaptad, az új online foglalásokról is kapsz majd értesítést.' }); out.push({ spec: id, ok: true, msg: 'Elküldve: ' + to.join(', ') }); }

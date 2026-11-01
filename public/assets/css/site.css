@@ -365,6 +365,7 @@ p{margin:0}
 .svc-n{font-family:var(--f-display);font-size:1.12rem;line-height:1.2;overflow-wrap:anywhere}
 .svc-p{font-weight:500;font-size:.9rem;white-space:nowrap;font-variant-numeric:lining-nums tabular-nums}
 .svc-d{grid-column:1/-1;font-size:.75rem;color:var(--stone)}
+.svc-desc{grid-column:1/-1;font-size:.8rem;color:var(--stone);line-height:1.35}
 .svc-row[aria-pressed="true"]{border-color:var(--gold);background:var(--gold-soft);box-shadow:inset 0 0 0 1px var(--gold)}
 .len-row{grid-column:1/-1;background:var(--pearl);border:1px solid rgba(34,28,30,.1);padding:14px;display:grid;gap:10px}
 .len-btns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}

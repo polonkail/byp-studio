@@ -167,13 +167,37 @@ export const SPECIALISTS = [
   },
   {
     id: 'viktoria', name: 'Német-Kotyuga Viktória', short: 'Kotyuga Viktória', role: 'Gél lakk, Műköröm', icon: 'polish', phone: '+36 30 845 4499',
-    booking: 'messenger', messenger: 'https://www.facebook.com/viktoria.kotyuga',
+    messenger: 'https://www.facebook.com/viktoria.kotyuga', // online foglalás; a link csak tartalék
     hours: DEFAULT_HOURS,
-    services: [
-      // durText: a honlapon kiírt időtartam (sáv); dur: a naptárban lefoglalt idő percben
-      { id: 'kez', name: 'Kézápolás, manikűr', dur: 60, durText: '30–60 perc' },
-      { id: 'zsele', name: 'Modern gél lakk', dur: 120, durText: '1,5–2 óra' },
-      { id: 'mukorom', name: 'Műköröm saját körömhosszig', dur: 150, durText: '2–2,5 óra' },
+    // Online foglalás (mint Petránál): előbb a szolgáltatás típusa, aztán a csomag és a méret.
+    // durText: a honlapon kiírt időtartam (sáv); dur: a naptárban lefoglalt idő percben (a sáv felső értéke).
+    lengths: [{ id: 's', name: 'S méret' }, { id: 'm', name: 'M méret' }, { id: 'l', name: 'L méret' }],
+    lengthQ: 'Melyik méretet kéred?', lengthMissing: 'Válaszd ki a méretet',
+    catQ: 'Válaszd ki a szolgáltatás típusát: modern gél lakk, műköröm vagy manikűr.',
+    priceNotes: ['Az árak forintban értendők.', 'Körömpótlás 800 Ft/db, full köves köröm +1 000 Ft.'],
+    categories: [
+      { id: 'gel', name: 'Modern gél lakk', durText: '1,5–2 óra', groups: [
+          { name: 'Modern gél lakk', services: [
+            { id: 'gel-min', name: 'Minimalista csomag', desc: 'Csak az alap és a fény van a körmökön.', dur: 120, durText: '1,5–2 óra', prices: [7000, 7200, 7500] },
+            { id: 'gel-norm', name: 'Normál csomag', desc: '1–3 szín + minimális díszítés.', dur: 120, durText: '1,5–2 óra', prices: [7500, 7700, 8000] },
+            { id: 'gel-med', name: 'Medium csomag', desc: '1–3 körömbe francia, ombre, kövek, porok stb.', dur: 120, durText: '1,5–2 óra', prices: [7800, 8000, 8300] },
+            { id: 'gel-extra', name: 'Extra csomag', desc: 'Full francia, ombre vagy extra díszítés.', dur: 120, durText: '1,5–2 óra', prices: [8800, 9000, 9300] },
+          ] },
+        ] },
+      { id: 'mukorom', name: 'Műköröm', label: 'Műköröm saját körömhosszig', durText: '2–2,5 óra', groups: [
+          { name: 'Műköröm saját körömhosszig', services: [
+            { id: 'mk-min', name: 'Minimalista csomag', desc: 'Csak az alap és a fény van a körmökön.', dur: 150, durText: '2–2,5 óra', prices: [7000, 7200, 7500] },
+            { id: 'mk-norm', name: 'Normál csomag', desc: '1–3 szín + minimális díszítés.', dur: 150, durText: '2–2,5 óra', prices: [7500, 7700, 8000] },
+            { id: 'mk-med', name: 'Medium csomag', desc: '1–3 körömbe francia, ombre, kövek, porok stb.', dur: 150, durText: '2–2,5 óra', prices: [7800, 8000, 8300] },
+            { id: 'mk-extra', name: 'Extra csomag', desc: 'Full francia, ombre vagy extra díszítés.', dur: 150, durText: '2–2,5 óra', prices: [8800, 9000, 9300] },
+          ] },
+        ] },
+      { id: 'manikur', name: 'Manikűr', durText: '30–60 perc', groups: [
+          { name: 'Manikűr', services: [
+            { id: 'kez', name: 'Női / férfi manikűr', dur: 60, durText: '30–60 perc', price: 4500 },
+            { id: 'anyagleszedes', name: 'Anyagleszedés + manikűr', dur: 60, durText: '30–60 perc', price: 5000 },
+          ] },
+        ] },
     ],
     priceList: {
       title: 'Gél lakk és műköröm', intro: 'VikNail',
