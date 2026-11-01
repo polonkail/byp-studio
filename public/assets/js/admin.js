@@ -527,7 +527,7 @@
       const r = await api('/api/admin/gcal-test');
       const rows = [row(r.account.ok, 'Szolgáltatásfiók kulcs', r.account.ok ? `Rendben (${r.account.email})` : r.account.msg)];
       for (const s of r.specs || []) rows.push(row(s.ok, `${specName(s.spec)} (${s.env}${s.calendar ? ' = ' + s.calendar : ''})`, s.msg));
-      out.replaceChildren(...rows);
+      out.replaceChildren(...rows, el('p', { class: 'muted small' }, 'A weboldal által látott beállítások: ' + ((r.seen || []).join(', ') || 'egyik sem')));
       $('#gcalSync').hidden = !(r.specs || []).some(s => s.ok);
     } catch (e) { out.replaceChildren(row(false, 'Hiba', e.message)); }
     btn.disabled = false;
@@ -538,7 +538,7 @@
     const row = (ok, title, msg) => el('div', { class: 'gc-row ' + (ok === true ? 'ok' : ok === false ? 'bad' : 'na') }, el('b', {}, (ok === true ? '✓ ' : ok === false ? '✗ ' : '– ') + title), el('span', {}, msg));
     try {
       const r = await post('/api/admin/mail-test', {});
-      out.replaceChildren(...(r.results ? r.results.map(x => row(x.ok, specName(x.spec), x.msg)) : [row(false, 'Beállítás', r.msg)]));
+      out.replaceChildren(...(r.results ? r.results.map(x => row(x.ok, specName(x.spec), x.msg)) : [row(false, 'Beállítás', r.msg)]), el('p', { class: 'muted small' }, 'A weboldal által látott beállítások: ' + ((r.seen || []).join(', ') || 'egyik sem')));
     } catch (e) { out.replaceChildren(row(false, 'Hiba', e.message)); }
     btn.disabled = false;
   });

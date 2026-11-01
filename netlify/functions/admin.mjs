@@ -226,9 +226,12 @@ export default handle(async req => {
 
   // --- Google Naptár foglaltság egy napra (a kezelőfelület naptárához) ---
   // --- e-mail értesítés: próbalevél ---
+  // a függvények által látott beállítás-NEVEK (értékek nélkül), a hibakereséshez
+  const envSeen = () => Object.keys(process.env).filter(k => /^(GCAL_|NOTIFY_|SMTP_|GOOGLE_)/i.test(k)).sort()
+    .map(k => k + (String(process.env[k] || '').trim() ? '' : ' (üres)') + (k !== k.trim() || k !== k.toUpperCase() ? ' (hibás név!)' : ''));
   if (route === 'mail-test' && M === 'POST') {
     const { mailEnabled, recipientsFor, sendMail } = await import('../lib/notify.mjs');
-    if (!mailEnabled()) return json({ ok: false, msg: 'Nincs beállítva az SMTP_USER és/vagy az SMTP_PASS környezeti változó (vagy beállítás után nem volt új deploy).' });
+    if (!mailEnabled()) return json({ ok: false, seen: envSeen(), msg: 'Nincs beállítva az SMTP_USER és/vagy az SMTP_PASS környezeti változó (vagy beállítás után nem volt új deploy).' });
     const out = [];
     for (const id of ['petra', 'csilla', 'viktoria']) {
       const to = recipientsFor(id);
@@ -236,12 +239,12 @@ export default handle(async req => {
       try { await sendMail({ to: to.join(','), subject: 'BYP Stúdió – próba értesítés', text: 'Ez egy próbalevél. Ha megkaptad, az új online foglalásokról is kapsz majd értesítést.' }); out.push({ spec: id, ok: true, msg: 'Elküldve: ' + to.join(', ') }); }
       catch (e) { out.push({ spec: id, ok: false, msg: /Invalid login|BadCredentials|535/i.test(e.message) ? 'A Gmail nem fogadta el a belépést. Az SMTP_PASS-ba alkalmazásjelszó kell (nem a sima Gmail-jelszó), és a fióknál be kell legyen kapcsolva a kétlépcsős azonosítás.' : 'Hiba: ' + e.message }); }
     }
-    return json({ ok: true, results: out });
+    return json({ ok: true, results: out, seen: envSeen() });
   }
   // --- Google Naptár: kapcsolat ellenőrzése ---
   if (route === 'gcal-test' && M === 'GET') {
     const ids = ['petra', 'csilla', 'andrea', 'viktoria'].filter(id => spec(id) && spec(id).booking !== 'messenger');
-    return json(await gcalDiagnose(ids));
+    return json({ ...(await gcalDiagnose(ids)), seen: envSeen() });
   }
   // --- Google Naptár: a már meglévő (mai és jövőbeli) foglalások felírása ---
   if (route === 'gcal-sync' && M === 'POST') {
