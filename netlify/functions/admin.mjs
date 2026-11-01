@@ -86,7 +86,7 @@ export default handle(async req => {
   // --- block time (szabadság, szünet): egy nap vagy -tól -ig időszak ---
   if (route === 'block' && M === 'POST') {
     const b = await req.json();
-    const targets = b.spec === 'all' ? ['petra', 'csilla', 'andrea', 'viktoria'].map(spec) : [spec(b.spec)];
+    const targets = b.spec === 'all' ? ['petra', 'csilla', 'dora', 'viktoria'].map(spec) : [spec(b.spec)];
     if (!targets[0] || !DATE_RE.test(b.date || '')) throw new HttpError(400, 'bad', 'Válassz szakembert és napot.');
     const last = DATE_RE.test(b.dateTo || '') && b.dateTo > b.date ? b.dateTo : b.date;
     const dates = [];
@@ -201,7 +201,7 @@ export default handle(async req => {
   // --- heti munkarend / szabadnapok ---
   if (route === 'schedule' && M === 'GET') {
     const out = {};
-    for (const id of ['petra', 'csilla', 'andrea', 'viktoria']) out[id] = { hours: spec(id).hours, defaults: defaultHours(id) };
+    for (const id of ['petra', 'csilla', 'dora', 'viktoria']) out[id] = { hours: spec(id).hours, defaults: defaultHours(id) };
     return json({ schedule: out });
   }
   if (route === 'schedule' && M === 'POST') {
@@ -243,7 +243,7 @@ export default handle(async req => {
   }
   // --- Google Naptár: kapcsolat ellenőrzése ---
   if (route === 'gcal-test' && M === 'GET') {
-    const ids = ['petra', 'csilla', 'andrea', 'viktoria'].filter(id => spec(id) && spec(id).booking !== 'messenger');
+    const ids = ['petra', 'csilla', 'dora', 'viktoria'].filter(id => spec(id) && spec(id).booking !== 'messenger');
     return json({ ...(await gcalDiagnose(ids)), seen: envSeen() });
   }
   // --- Google Naptár: a már meglévő (mai és jövőbeli) foglalások felírása ---
@@ -261,7 +261,7 @@ export default handle(async req => {
     const date = url.searchParams.get('date');
     if (!DATE_RE.test(date || '')) throw new HttpError(400, 'bad', 'Hibás dátum.');
     const out = {};
-    for (const id of ['petra', 'csilla', 'andrea', 'viktoria']) if (gcalEnabled(id)) out[id] = (await gcalBusy(id, date, date))[date] || [];
+    for (const id of ['petra', 'csilla', 'dora', 'viktoria']) if (gcalEnabled(id)) out[id] = (await gcalBusy(id, date, date))[date] || [];
     return json({ busy: out });
   }
 

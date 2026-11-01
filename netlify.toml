@@ -20,3 +20,16 @@
   for = "/feltoltes/*"
   [headers.values]
     X-Robots-Tag = "noindex"
+
+# Löki Andrea régi árlista-oldala → az új szempilla-szakember oldala
+[[redirects]]
+  from = "/arlista/andrea/*"
+  to = "/arlista/dora/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/arlista/andrea"
+  to = "/arlista/dora/"
+  status = 301
+  force = true

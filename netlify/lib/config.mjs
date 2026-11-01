@@ -130,39 +130,40 @@ export const SPECIALISTS = [
     ],
   },
   {
-    id: 'andrea', name: 'Löki Andrea', role: 'Szempillaépítés, Fülbelövés', icon: 'lash', phone: '+36 30 608 2304',
-    // Időpont-egyeztetés Messengeren (online naptár helyett): https://m.me/<felhasználónév>
-    booking: 'messenger', messenger: 'https://www.facebook.com/ancsii23',
+    id: 'dora', name: 'Klénerné Szabó Dóra', short: 'Szabó Dóra', role: 'Szempillaépítés, Szemöldök', icon: 'lash', phone: '+36 30 753 3793',
+    // Időpont-egyeztetés Messengeren (online naptár helyett)
+    booking: 'messenger', messenger: 'https://www.facebook.com/profile.php?id=61556873259351',
+    hideDur: true, // az időtartamok egyelőre nem jelennek meg (a dur csak a telefonos rögzítéshez kell, ott módosítható)
     hours: DEFAULT_HOURS,
     services: [
-      { id: 'szempilla', name: 'Szempillaépítés', dur: 150 },
-      { id: 'lifting', name: 'Szempillalifting', dur: 60 },
-      { id: 'fulbelo', name: 'Fülbelövés', dur: 15 },
+      { id: 'szempilla', name: 'Szempillaépítés (1D–5D)', dur: 120 },
+      { id: 'toltes', name: 'Szempilla töltés', dur: 90 },
+      { id: 'lifting', name: 'Szempilla lifting', dur: 60 },
+      { id: 'leoldas', name: 'Leoldás', dur: 30 },
+      { id: 'szemoldok-formazas', name: 'Szemöldök formázás', dur: 30 },
+      { id: 'szemoldok-festes', name: 'Szemöldök festés', dur: 30 },
+      { id: 'szemoldok-laminalas', name: 'Szemöldök laminálás', dur: 60 },
     ],
     priceList: {
-      title: 'Szempilla és fülbelövés', intro: 'LAshes by Andi',
+      title: 'Szempilla és szemöldök', intro: "Pilla'n'Go – Klénerné Szabó Dóra",
       groups: [
-        { name: 'Szempillaépítés', wide: true, cols: ['Építés', 'Töltés'], rows: [
-          { name: '2D', prices: [12000, 10000] },
-          { name: '3D', prices: [12500, 10500] },
-          { name: '4D', prices: [13500, 11500] },
-          { name: '5D', prices: [14500, 12500] },
-          { name: '6D', prices: [15500, 13500] },
+        { name: 'Műszempilla-építés', wide: true, cols: ['Teljes szett', 'Töltés 2 hétig', 'Töltés 3 hétig'], rows: [
+          { name: '1D classic', prices: [11000, 9000, 10000] },
+          { name: '2D duplaszál', prices: [12000, 10000, 11000] },
+          { name: '3D volume', prices: [13000, 11000, 12000] },
+          { name: '4D volume', prices: [14000, 12000, 13000] },
+          { name: '5D mega volume', prices: [15000, 13000, 14000] },
         ] },
-        { name: 'Szempillalifting', rows: [
-          { name: 'Szempillalifting', price: 8000 },
-          { name: 'Szempillalifting + festés', price: 9000 },
+        { name: 'Szempilla', rows: [
+          { name: 'Szempilla lifting', price: 10000 },
+          { name: 'Leoldás', price: 5000 },
         ] },
-        { name: 'Fülbelövés', rows: [
-          { name: 'Fülbelövés', desc: 'Az ár az ékszert is tartalmazza.', priceText: '3 500 Ft / lövés' },
-          { name: 'Utókezelő folyadék', desc: '2 vagy több lövés esetén ajándék.', price: 500 },
+        { name: 'Szemöldök', rows: [
+          { name: 'Formázás, festés', price: 6000 },
+          { name: 'Egyben', desc: 'Laminálás, formázás, festés.', price: 7000 },
         ] },
       ],
-      notes: [
-        'A töltés 4 hétig (a 28. napig) érvényes, ha a szett 30%-a még fent van; egyéb esetben az új szett ára érvényes.',
-        'Az árak forintban értendők.',
-        'Az árváltozás jogát fenntartom.',
-      ],
+      notes: ['4 hét után a teljes szett ára érvényes.', 'Az árak forintban értendők.', 'Az árak változtatásának jogát fenntartom.'],
     },
   },
   {

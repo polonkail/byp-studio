@@ -69,11 +69,12 @@
         s.categories
           ? el('ul', { class: 'svc-list' }, s.categories.flatMap(c => c.groups.filter(g => g.bookable !== false).map(g => el('li', {}, c.hideName ? g.name.split(' (')[0] : c.groups.length > 1 ? `${c.name}: ${g.name.toLowerCase()}` : c.label || (c.durText ? c.name : `${c.name} hajvágás`), el('span', {}, c.durText || `${g.services.length} szolgáltatás`)))),
               el('li', { class: 'svc-more' }, el('a', { class: 'textlink', href: '/arlista/' + s.id + '/' }, 'Teljes árlista', icon('arrow-right'))))
-          : el('ul', { class: 'svc-list' }, s.services.map(v => el('li', {}, v.name, el('span', {}, v.durText || durTxt(v.dur)))),
+          : el('ul', { class: 'svc-list' }, s.services.map(v => el('li', {}, v.name, s.hideDur ? null : el('span', {}, v.durText || durTxt(v.dur)))),
               s.priceList ? el('li', { class: 'svc-more' }, el('a', { class: 'textlink', href: '/arlista/' + s.id + '/' }, 'Teljes árlista', icon('arrow-right'))) : null),
         el('div', { class: 'member-foot' },
           el('a', { class: 'tel', href: 'tel:' + s.phone.replace(/\s/g, '') }, icon('phone'), s.phone),
-          el('a', { class: 'textlink', href: '/foglalas/?szakember=' + s.id }, 'Időpontot foglalok', icon('arrow-right')))));
+          s.noBooking ? el('a', { class: 'textlink', href: s.messenger, target: '_blank', rel: 'noopener' }, 'Írok Messengeren', icon('arrow-right'))
+            : el('a', { class: 'textlink', href: '/foglalas/?szakember=' + s.id }, 'Időpontot foglalok', icon('arrow-right')))));
     }
   }
 
@@ -181,7 +182,7 @@
     return out;
   }
   function helpBox(S) {
-    const phones = S ? [S] : CFG.specialists;
+    const phones = S ? [S] : CFG.specialists.filter(x => !x.noBooking);
     return el('div', { class: 'help-call' }, icon('phone'),
       el('div', {},
         el('p', { class: 'help-t' }, 'Nem vagy biztos benne, melyik kezelést válaszd?'),
@@ -206,7 +207,7 @@
   }
   function renderBooking() {
     const ps = $('#pickSpec'); ps.replaceChildren();
-    for (const s of CFG.specialists) ps.append(el('button', { type: 'button', class: 'opt', 'aria-pressed': String(st.spec === s.id), onclick: () => selectSpec(s.id) }, icon(s.icon), el('b', {}, s.short || s.name), el('small', {}, s.role)));
+    for (const s of CFG.specialists.filter(x => !x.noBooking)) ps.append(el('button', { type: 'button', class: 'opt', 'aria-pressed': String(st.spec === s.id), onclick: () => selectSpec(s.id) }, icon(s.icon), el('b', {}, s.short || s.name), el('small', {}, s.role)));
     const S = curSpec();
     if (S && S.booking === 'messenger' && !ADMIN) {
       $('#helpBox')?.replaceChildren(messengerBox(S));
@@ -227,7 +228,7 @@
     const row = v => {
       const it = st.items.find(x => x.svc === v.id), on = !!it;
       const out = [el('button', { type: 'button', class: 'svc-row', 'aria-pressed': String(on), onclick: () => toggle(v) },
-        el('span', { class: 'svc-n' }, el('span', { class: 'svc-check', 'aria-hidden': 'true' }, on ? icon('check') : null), v.name), el('span', { class: 'svc-p' }, priceSummary(v)), el('span', { class: 'svc-d' }, v.durText || durTxt(v.dur)), v.desc ? el('span', { class: 'svc-desc' }, v.desc) : null)];
+        el('span', { class: 'svc-n' }, el('span', { class: 'svc-check', 'aria-hidden': 'true' }, on ? icon('check') : null), v.name), el('span', { class: 'svc-p' }, priceSummary(v)), curSpec()?.hideDur ? null : el('span', { class: 'svc-d' }, v.durText || durTxt(v.dur)), v.desc ? el('span', { class: 'svc-desc' }, v.desc) : null)];
       if (on && v.prices) out.push(el('div', { class: 'len-row' },
         el('p', { class: 'blk-t' }, `${S.lengthQ || 'Milyen hosszú a hajad?'} (${v.name})`),
         el('div', { class: 'len-btns' }, LENS().map((L, i) => el('button', { type: 'button', class: 'len-btn', disabled: v.prices[i] == null, 'aria-pressed': String(it.len === L.id), onclick: () => setLen(v, L.id) },
@@ -513,7 +514,7 @@
       }
       renderBooking();
       const pre = new URLSearchParams(location.search).get('szakember');
-      if (pre && specById(pre)) { selectSpec(pre); const k = new URLSearchParams(location.search).get('kat'); if (k && specById(pre).categories?.some(c => c.id === k)) { st.cat = k; renderBooking(); } }
+      if (pre && specById(pre) && !specById(pre).noBooking) { selectSpec(pre); const k = new URLSearchParams(location.search).get('kat'); if (k && specById(pre).categories?.some(c => c.id === k)) { st.cat = k; renderBooking(); } }
     }
     if (has('#gbSpec')) makePicker('#gbSpec');
     if (has('#fbSpec')) makePicker('#fbSpec');

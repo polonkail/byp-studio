@@ -65,7 +65,7 @@ A GitHub repositoryban **Add file → Upload files**, húzd be újra a kicsomago
 Mindkét naptárhoz ugyanaz az egy szolgáltatásfiók (és ugyanaz a JSON) használható.
 
 ## Messenger-linkek
-`netlify/lib/config.mjs` → Löki Andrea (facebook.com/ancsii23) és Német-Kotyuga Viktória (facebook.com/viktoria.kotyuga) – a Facebook-profiljukra mutat `messenger:` sora.
+`netlify/lib/config.mjs` → Klénerné Szabó Dóra `messenger:` sora (Facebook-profil). Viktória online foglal.
 
 ## Hatóidő (rövid szolgáltatás festés közben)
 `netlify/lib/config.mjs`: a `pause: [30, 75]` azt jelenti, hogy a kezdéstől számított 30. és 75. perc között hatóidő van (Festés, Tőfestés, Fóliás és Sapkás melír, Szőkítés, Tő szőkítés, Balayage). Ebbe a 30–45 perces szolgáltatások foglalhatók (pl. férfi hajvágás, száraz vágás, mosás + szárítás, vasalás, sütés, fonás, gyerek hajvágás). Egy szolgáltatásnál `pauseOk: false` kizárja, `pauseOk: true` engedélyezi.

@@ -77,7 +77,7 @@ for sp in specs:
 picker = ('  <section class="sec silk" id="arlista">\n    <div class="wrap">\n      <p class="lead pl-pick-lead">Válaszd ki a szakembert, akinek az árlistáját meg szeretnéd nézni.</p>\n'
           '      <div class="pl-pick">\n' + '\n'.join(cards) + '\n      </div>\n    </div>\n  </section>\n')
 write('arlista/index.html',
-      page_head('Árlista · BYP Studio Hajdúszoboszló', 'A BYP Studio árlistái: fodrászat, kéz- és lábápolás, műköröm, gél lakk, pedikűr, szempillaépítés és fülbelövés, Hajdúszoboszló.')
+      page_head('Árlista · BYP Studio Hajdúszoboszló', 'A BYP Studio árlistái: fodrászat, kéz- és lábápolás, műköröm, gél lakk, pedikűr, szempillaépítés és szemöldök, Hajdúszoboszló.')
       + header('arlista') + '\n<main id="top">\n'
       + page_hero('Árlista', 'Áraink <em>átláthatóan</em>', 'Négy szakember, négy árlista. Az árak forintban értendő bruttó árak.')
       + picker + '</main>\n\n' + footer + '\n\n' + script + '\n</body>\n</html>\n')
