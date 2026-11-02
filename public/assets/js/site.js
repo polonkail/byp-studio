@@ -56,8 +56,9 @@
     return '';
   };
   const LENS = () => (st.spec && specById(st.spec)?.lengths) || CFG.lengths; // hajhossz vagy (Csillánál) méret
-  const lenIdx = id => LENS().findIndex(l => l.id === id);
-  const chosenPrice = (v, len) => v.prices ? (len ? ft(v.prices[lenIdx(len)]) : priceSummary(v)) : priceSummary(v);
+  const lensOf = v => v?.lengths || LENS(); // szolgáltatásonként eltérő skála is lehet
+  const lenIdx = (id, v) => lensOf(v).findIndex(l => l.id === id);
+  const chosenPrice = (v, len) => v.prices ? (len ? ft(v.prices[lenIdx(len, v)]) : priceSummary(v)) : priceSummary(v);
 
   /* ---------- team ---------- */
   function renderTeam() {
@@ -122,12 +123,12 @@
   const cartItems = () => { const S = curSpec(); return st.items.map(it => ({ ...it, v: svcOf(S, it.svc) })).filter(it => it.v); };
   const svcReady = () => { const c = cartItems(); return c.length > 0 && c.every(it => !it.v.prices || it.len); };
   const totalDur = () => cartItems().reduce((a, it) => a + it.v.dur, 0);
-  const itemLabel = it => [it.v.catName, it.v.name, it.len && (curSpec()?.lengths ? LENS()[lenIdx(it.len)].name : LENS()[lenIdx(it.len)].name.toLowerCase())].filter(Boolean).join(' · ');
+  const itemLabel = it => [it.v.catName, it.v.name, it.len && (curSpec()?.lengths ? lensOf(it.v)[lenIdx(it.len, it.v)].name : lensOf(it.v)[lenIdx(it.len, it.v)].name.toLowerCase())].filter(Boolean).join(' · ');
   const isTextPrice = v => !v.prices && !v.price;
   function cartPrice() {
     const c = cartItems(); let sum = 0; const extra = [];
     for (const it of c) {
-      if (it.v.prices) { if (it.len) sum += it.v.prices[lenIdx(it.len)]; else extra.push(priceSummary(it.v)); }
+      if (it.v.prices) { if (it.len) sum += it.v.prices[lenIdx(it.len, it.v)]; else extra.push(priceSummary(it.v)); }
       else if (it.v.price) sum += it.v.price;
       else if (it.v.priceText) extra.push(it.v.priceText);
     }
@@ -231,7 +232,7 @@
         el('span', { class: 'svc-n' }, el('span', { class: 'svc-check', 'aria-hidden': 'true' }, on ? icon('check') : null), v.name), el('span', { class: 'svc-p' }, priceSummary(v)), curSpec()?.hideDur ? null : el('span', { class: 'svc-d' }, v.durText || durTxt(v.dur)), v.desc ? el('span', { class: 'svc-desc' }, v.desc) : null)];
       if (on && v.prices) out.push(el('div', { class: 'len-row' },
         el('p', { class: 'blk-t' }, `${S.lengthQ || 'Milyen hosszú a hajad?'} (${v.name})`),
-        el('div', { class: 'len-btns' }, LENS().map((L, i) => el('button', { type: 'button', class: 'len-btn', disabled: v.prices[i] == null, 'aria-pressed': String(it.len === L.id), onclick: () => setLen(v, L.id) },
+        el('div', { class: 'len-btns' }, lensOf(v).map((L, i) => el('button', { type: 'button', class: 'len-btn', disabled: v.prices[i] == null, 'aria-pressed': String(it.len === L.id), onclick: () => setLen(v, L.id) },
           el('b', {}, L.name), el('span', {}, v.prices[i] == null ? 'nem elérhető' : ft(v.prices[i])))))));
       return out;
     };

@@ -480,7 +480,7 @@
         box.append(el('p', { class: 'm-g' }, gn));
         for (const v of list) {
           const chk = el('input', { type: 'checkbox', checked: v.id in state.items });
-          const lenSel = v.prices ? el('select', { 'aria-label': sp.lengths ? 'Méret' : 'Hajhossz' }, el('option', { value: '' }, (sp.lengths ? 'Válassz méretet' : 'Válassz hajhosszt')), (sp.lengths || CFG.lengths).map((L, i) => v.prices[i] == null ? null : el('option', { value: L.id, selected: state.items[v.id] === L.id }, `${L.name} · ${ftA(v.prices[i])}`))) : null;
+          const lenSel = v.prices ? el('select', { 'aria-label': sp.lengths ? 'Méret' : 'Hajhossz' }, el('option', { value: '' }, (sp.lengths ? 'Válassz méretet' : 'Válassz hajhosszt')), (v.lengths || sp.lengths || CFG.lengths).map((L, i) => v.prices[i] == null ? null : el('option', { value: L.id, selected: state.items[v.id] === L.id }, `${L.name} · ${ftA(v.prices[i])}`))) : null;
           if (lenSel) { lenSel.hidden = !(v.id in state.items); lenSel.addEventListener('change', () => { state.items[v.id] = lenSel.value || null; }); }
           chk.addEventListener('change', () => { if (chk.checked) state.items[v.id] = null; else delete state.items[v.id]; if (lenSel) lenSel.hidden = !chk.checked; paintDur(); });
           box.append(el('label', { class: 'm-svc' }, chk, el('span', {}, v.name), el('small', {}, durA(v.dur)), lenSel));

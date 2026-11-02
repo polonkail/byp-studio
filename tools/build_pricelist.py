@@ -49,8 +49,9 @@ def spec_view(sp):
                     title, wide = g['name'], False
                 else:
                     title, wide = g['name'], False
-                rows = [{'name': v['name'], **{k: v[k] for k in ('prices', 'price', 'priceText') if k in v}} for v in g['services']]
-                tbls.append(table(title, rows, cols if any(v.get('prices') for v in g['services']) else None, wide or g.get('wide', False)))
+                rows = [{'name': v['name'], **{k: v[k] for k in ('prices', 'price', 'priceText', 'desc') if k in v}} for v in g['services']]
+                gcols = next(([L['name'] for L in v['lengths']] for v in g['services'] if v.get('lengths')), cols)
+                tbls.append(table(title, rows, gcols if any(v.get('prices') for v in g['services']) else None, wide or g.get('wide', False) or len(gcols) > 3))
         return sp.get('plTitle', sp['role']), sp.get('plIntro', ''), ''.join(tbls), sp.get('priceNotes', [])
     pl = sp['priceList']
     tbls = ''.join(table(g['name'], g['rows'], g.get('cols'), g.get('wide', False)) for g in pl['groups'])

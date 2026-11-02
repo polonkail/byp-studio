@@ -17,7 +17,7 @@ export function resolveItems(s, rawItems, { requireLength = true } = {}) {
     seen.add(v.id);
     let lenName = '', num = v.price || null, txt = v.priceText || (v.price ? ft(v.price) : '');
     if (v.prices) {
-      const LS = s.lengths || LENGTHS;
+      const LS = v.lengths || s.lengths || LENGTHS;
       const li = LS.findIndex(l => l.id === r.length);
       if (li < 0 || v.prices[li] == null) {
         if (requireLength) throw new HttpError(400, 'bad_length', `${s.lengths ? 'Válaszd ki a méretet' : 'Válaszd ki a hajhosszt'} ennél: ${v.name}.`);

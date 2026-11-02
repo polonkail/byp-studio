@@ -50,6 +50,12 @@ export const SPECIALISTS = [
             { id: 'noi-sutes', name: 'Hajsütés', dur: 45, prices: [null, 6000, 7000] },
             { id: 'noi-fonas', name: 'Fonás', dur: 30, priceText: '4 500 Ft-tól' },
           ] },
+          { name: 'Keratinos hajegyenesítés', services: [
+            // saját hajhossz-skála (Extra hosszú is van); a festésekhez hasonlóan a hatóidőbe rövid szolgáltatás foglalható
+            { id: 'noi-cocochoco', name: 'COCOCHOCO Original Keratin kezelés', desc: 'Tartós, formaldehidmentes keratinos hajegyenesítés. Extra dús haj esetén egyedi ár.',
+              dur: 180, pause: [30, 75], lengths: [{ id: 'rovid', name: 'Rövid' }, { id: 'felhosszu', name: 'Félhosszú' }, { id: 'hosszu', name: 'Hosszú' }, { id: 'extra', name: 'Extra hosszú' }],
+              prices: [25000, 30000, 37000, 42000] },
+          ] },
           { name: 'Hajhosszabbítás', services: [
             { id: 'hh-hoillesztes', name: 'Hajhosszabbítás hőillesztéssel', dur: 180, priceText: '27 000 Ft / 100 g' },
             { id: 'hh-mikro', name: 'Hajhosszabbítás mikro- vagy nanogyűrűvel', dur: 180, priceText: '33 000 Ft / 100 g' },
