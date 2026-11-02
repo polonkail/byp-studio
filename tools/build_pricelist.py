@@ -21,7 +21,7 @@ def table(title, rows, cols=None, wide=False):
         name = E(r['name']) + ('<small class="pdesc">%s</small>' % E(r['desc']) if r.get('desc') else '')
         if has_cols and r.get('prices'):
             cells = ''.join('<td data-label="%s"%s>%s</td>' % (E(c), ' class="na"' if p is None else '', '–' if p is None else ft(p))
-                            for c, p in zip(cols, r['prices']))
+                            for c, p in zip(cols, list(r['prices']) + [None] * (len(cols) - len(r['prices']))))
         else:
             txt = r.get('priceText') or (ft(r['price']) if r.get('price') else '')
             span = ' colspan="%d"' % len(cols) if has_cols else ''
